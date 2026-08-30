@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 
 // Nested Location Telemetry Structure
 @Schema({ _id: false }) // Bypasses unnecessary inner auto-ID creation overhead
@@ -15,14 +15,14 @@ export class LocationCoordinate {
 }
 
 @Schema({ timestamps: true })
-export class TrackingLog extends Document {
+export class TrackingLog {
   // Strong Relational Binding to the exact active order
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Order', required: true, unique: true })
-  orderId!: MongooseSchema.Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Order', required: true, unique: true })
+  orderId!: Types.ObjectId;
 
   // Reference back to the driver executing the route
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Driver', required: true })
-  driverId!: MongooseSchema.Types.ObjectId;
+  @Prop({ type: Types.ObjectId, ref: 'Driver', required: true })
+  driverId!: Types.ObjectId;
 
   // The Time-Series Array Bucket
   @Prop({ type: [LocationCoordinate], default: [] })
@@ -32,6 +32,7 @@ export class TrackingLog extends Document {
   isActiveStream!: boolean;
 }
 
+export type TrackingLogDocument = HydratedDocument<TrackingLog>;
 export const TrackingLogSchema = SchemaFactory.createForClass(TrackingLog);
 
 // Geospatial and Relational Indexing Optimization
