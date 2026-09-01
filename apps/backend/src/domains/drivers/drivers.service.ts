@@ -1,9 +1,10 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Driver } from './schemas/driver.schema';
 import { Model } from 'mongoose';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import * as bcrypt from 'bcrypt';
+import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 
 @Injectable()
 export class DriversService {
@@ -30,4 +31,21 @@ export class DriversService {
 
         return newDriver.save();
     }
+
+    async updateStatus(driverId: string, updateDriverStatusDto: UpdateDriverStatusDto): Promise<Driver> {
+        const { status } = updateDriverStatusDto;
+
+        const updatedDriver = await this.driverModel.findByIdAndUpdate(
+            driverId,
+            { status },
+            { new: true, runValidators: true }
+        ).exec();
+
+        if (!updatedDriver) {
+            throw new NotFoundException('No registered driver found mapping to this identification token.');
+        }
+
+        return updatedDriver;
+    }
+
 }
