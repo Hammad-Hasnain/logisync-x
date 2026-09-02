@@ -7,6 +7,7 @@ import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { SignOptions } from 'jsonwebtoken';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 
 @Module({
@@ -31,7 +32,7 @@ import { SignOptions } from 'jsonwebtoken';
     }),
   ],
   controllers: [DriversController],
-  providers: [DriversService],
-  exports: [DriversService],
+  providers: [DriversService, JwtStrategy],
+  exports: [DriversService, JwtModule, PassportModule],
 })
 export class DriversModule { }
