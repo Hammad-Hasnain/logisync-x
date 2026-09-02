@@ -3,6 +3,7 @@ import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { Driver } from './schemas/driver.schema';
+import { LoginDriverDto } from './dto/login-driver.dto';
 
 @Controller('drivers')
 export class DriversController {
@@ -19,6 +20,11 @@ export class DriversController {
         @Body() updateDriverStatusDto: UpdateDriverStatusDto,
     ): Promise<Driver> {
         return this.driversService.updateStatus(id, updateDriverStatusDto);
+    }
+
+    @Post('login')
+    async logIn(@Body() loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: Partial<Driver> }> {
+        return this.driversService.login(loginDriverDto);
     }
 }
 

@@ -1,15 +1,18 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Driver } from './schemas/driver.schema';
 import { Model } from 'mongoose';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import * as bcrypt from 'bcrypt';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
+import { LoginDriverDto } from './dto/login-driver.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class DriversService {
     constructor(
         @InjectModel(Driver.name) private readonly driverModel: Model<Driver>,
+        private readonly jwtService: JwtService
     ) { }
 
     async create(createDriverDto: CreateDriverDto): Promise<Driver> {
@@ -46,6 +49,33 @@ export class DriversService {
         }
 
         return updatedDriver;
+    }
+
+    async login(loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: Partial<Driver> }> {
+        const { email, password } = loginDriverDto;
+
+        const driver = await this.driverModel.findOne({ email }).exec();
+        if (!driver) {
+            throw new UnauthorizedException('Invalid login credentials provided.');
+        }
+
+        const isPasswordMatching = await bcrypt.compare(password, driver.passwordHash);
+        if (!isPasswordMatching) {
+            throw new UnauthorizedException('Invalid login credentials provided.');
+        }
+
+        const tokenPayload = { sub: driver._id, email: driver.email };
+        const accessToken = await this.jwtService.signAsync(tokenPayload);
+
+        return {
+            accessToken,
+            driver: {
+                _id: driver._id,
+                name: driver.name,
+                email: driver.email,
+                status: driver.status,
+            },
+        };
     }
 
 }
