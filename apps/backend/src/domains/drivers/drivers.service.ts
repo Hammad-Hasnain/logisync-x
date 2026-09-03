@@ -41,7 +41,7 @@ export class DriversService {
         const updatedDriver = await this.driverModel.findByIdAndUpdate(
             driverId,
             { status },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         ).exec();
 
         if (!updatedDriver) {

@@ -33,7 +33,6 @@ export class TrackingService {
     async pushLocation(pushCoordinateDto: PushCoordinateDto): Promise<TrackingLog> {
         const { orderId, latitude, longitude } = pushCoordinateDto;
 
-        // Core Architectural Query: Find the active log session and atomically push the nested object
         const updatedLog = await this.trackingLogModel.findOneAndUpdate(
             {
                 orderId: new Types.ObjectId(orderId),
@@ -48,7 +47,7 @@ export class TrackingService {
                     }
                 }
             },
-            { new: true }
+            { returnDocument: 'after' }
         ).exec();
 
         if (!updatedLog) {
