@@ -4,9 +4,9 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './schemas/order.schema';
 import { AssignDriverDto } from '../drivers/dto/assign-driver.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../drivers/guards/roles.guard';
-import { Roles } from '../drivers/decorators/roles.decorator';
-import { Role } from '../drivers/enums/role.enum';
+import { RolesGuard } from '../../shared/guards/roles.guard';
+import { Roles } from '../../shared/decorators/roles.decorator';
+import { Role } from '../../shared/enums/role.enum';
 
 @Controller('orders')
 export class OrdersController {

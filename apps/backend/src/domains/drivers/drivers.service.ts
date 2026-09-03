@@ -7,7 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { LoginDriverDto } from './dto/login-driver.dto';
 import { JwtService } from '@nestjs/jwt';
-import { Role } from './enums/role.enum';
+import { Role } from '../../shared/enums/role.enum';
 
 @Injectable()
 export class DriversService {
