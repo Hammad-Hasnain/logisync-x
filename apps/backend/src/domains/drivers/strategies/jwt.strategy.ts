@@ -19,10 +19,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    async validate(payload: { sub: string; email: string }) {
+    async validate(payload: { sub: string; email: string, role: string }) {
         if (!payload) {
             throw new UnauthorizedException('Authentication signature verification failed.');
         }
-        return { id: payload.sub, email: payload.email };
+        return { id: payload.sub, email: payload.email, role: payload.role };
     }
 }

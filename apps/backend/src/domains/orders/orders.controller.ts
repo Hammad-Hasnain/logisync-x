@@ -1,8 +1,12 @@
-import { Body, Controller, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './schemas/order.schema';
 import { AssignDriverDto } from '../drivers/dto/assign-driver.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../drivers/guards/roles.guard';
+import { Roles } from '../drivers/decorators/roles.decorator';
+import { Role } from '../drivers/enums/role.enum';
 
 @Controller('orders')
 export class OrdersController {
@@ -14,6 +18,8 @@ export class OrdersController {
     }
 
     @Patch(':id/assign')
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(Role.ADMIN)
     async assignDriver(
         @Param('id') id: string,
         @Body() assignDriverDto: AssignDriverDto,

@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { LoginDriverDto } from './dto/login-driver.dto';
 import { JwtService } from '@nestjs/jwt';
+import { Role } from './enums/role.enum';
 
 @Injectable()
 export class DriversService {
@@ -64,7 +65,7 @@ export class DriversService {
             throw new UnauthorizedException('Invalid login credentials provided.');
         }
 
-        const tokenPayload = { sub: driver._id, email: driver.email };
+        const tokenPayload = { sub: driver._id, email: driver.email, role: Role.DRIVER };
         const accessToken = await this.jwtService.signAsync(tokenPayload);
 
         return {
