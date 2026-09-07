@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from './schemas/order.schema';
@@ -25,5 +25,11 @@ export class OrdersController {
         @Body() assignDriverDto: AssignDriverDto,
     ): Promise<Order> {
         return this.ordersService.assignDriver(id, assignDriverDto);
+    }
+
+    @Get()
+    @UseGuards(AuthGuard('jwt'))
+    async getAllOrders(): Promise<Order[]> {
+        return this.ordersService.findAll();
     }
 }

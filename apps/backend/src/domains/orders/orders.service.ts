@@ -63,4 +63,8 @@ export class OrdersService {
             await session.endSession();
         }
     }
+
+    async findAll(): Promise<Order[]> {
+        return this.orderModel.find().exec();
+    }
 }

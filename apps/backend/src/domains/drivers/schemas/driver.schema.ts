@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Role } from 'src/shared/enums/role.enum';
 
 // precise structural states for a Driver fleet lifecycle
 export enum DriverStatus {
@@ -24,6 +25,9 @@ export class Driver extends Document {
 
     @Prop({ type: String, default: null })
     currentVehicleNumber!: string | null;
+
+    @Prop({ type: String, enum: Object.values(Role), default: Role.DRIVER }) // 👈 ADD THIS LAYER
+    role!: Role;
 }
 
 //  Compile the exact Mongoose Schema instance mapping

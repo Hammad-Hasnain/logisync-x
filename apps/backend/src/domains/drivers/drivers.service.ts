@@ -31,6 +31,7 @@ export class DriversService {
             name,
             email,
             passwordHash,
+            role: Role.DRIVER,
         });
 
         return newDriver.save();
@@ -75,8 +76,13 @@ export class DriversService {
                 name: driver.name,
                 email: driver.email,
                 status: driver.status,
+                role: driver.role,
             },
         };
+    }
+
+    async findAll(): Promise<Driver[]> {
+        return this.driverModel.find().exec();
     }
 
 }
