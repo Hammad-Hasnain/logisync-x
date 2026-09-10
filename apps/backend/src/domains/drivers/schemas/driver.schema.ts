@@ -1,35 +1,30 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import { Role } from 'src/shared/enums/role.enum';
+import { HydratedDocument, Types } from 'mongoose';
+import { FleetStatus } from 'src/shared/enums/fleet-status.enum';
 
-// precise structural states for a Driver fleet lifecycle
-export enum DriverStatus {
-    AVAILABLE = 'AVAILABLE',
-    ON_TRIP = 'ON_TRIP',
-    OFFLINE = 'OFFLINE'
-}
+export type DriverDocument = HydratedDocument<Driver>;
 
-@Schema({ timestamps: true }) // Automatic createdAt and updatedAt injections
-export class Driver extends Document {
+@Schema({ timestamps: true })
+export class Driver {
+    // THE AUTH BINDING LINK: Reference pointing straight back to the identities collection _id
+    @Prop({ type: Types.ObjectId, required: true, ref: 'Identity', unique: true })
+    identityId!: Types.ObjectId;
+
     @Prop({ required: true, trim: true })
     name!: string;
 
-    @Prop({ required: true, unique: true, lowercase: true, trim: true })
-    email!: string;
+    @Prop({ required: true, trim: true })
+    licenseNumber!: string;
 
-    @Prop({ required: true, minlength: 6 })
-    passwordHash!: string;
+    @Prop({ required: true, trim: true })
+    currentVehicleNumber!: string;
 
-    @Prop({ required: true, enum: Object.values(DriverStatus), default: DriverStatus.OFFLINE })
-    status!: DriverStatus;
-
-    @Prop({ type: String, default: null })
-    currentVehicleNumber!: string | null;
-
-    @Prop({ type: String, enum: Object.values(Role), default: Role.DRIVER }) // 👈 ADD THIS LAYER
-    role!: Role;
+    @Prop({
+        type: String,
+        enum: Object.values(FleetStatus),
+        default: FleetStatus.OFFLINE
+    })
+    fleetStatus!: FleetStatus;
 }
 
-//  Compile the exact Mongoose Schema instance mapping
 export const DriverSchema = SchemaFactory.createForClass(Driver);
-

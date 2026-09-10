@@ -1,88 +1,97 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Driver } from './schemas/driver.schema';
-import { Model } from 'mongoose';
+import { Model, Connection } from 'mongoose';
+import { InjectConnection } from '@nestjs/mongoose';
+import { Driver, DriverDocument } from './schemas/driver.schema';
 import { CreateDriverDto } from './dto/create-driver.dto';
-import * as bcrypt from 'bcrypt';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { LoginDriverDto } from './dto/login-driver.dto';
-import { JwtService } from '@nestjs/jwt';
-import { Role } from '../../shared/enums/role.enum';
+import { IdentityService } from '../identity/identity.service';
+import { FleetStatus } from 'src/shared/enums/fleet-status.enum';
+import { Role } from 'src/shared/enums/role.enum';
 
 @Injectable()
 export class DriversService {
     constructor(
         @InjectModel(Driver.name) private readonly driverModel: Model<Driver>,
-        private readonly jwtService: JwtService
+        private readonly identityService: IdentityService,
+        @InjectConnection() private readonly connection: Connection,
     ) { }
 
-    async create(createDriverDto: CreateDriverDto): Promise<Driver> {
-        const { name, email, password } = createDriverDto;
+    async create(createDriverDto: CreateDriverDto): Promise<DriverDocument> {
+        const { name, email, password, phone, licenseNumber, currentVehicleNumber } = createDriverDto;
 
-        const existingDriver = await this.driverModel.findOne({ email }).exec();
-        if (existingDriver) {
-            throw new ConflictException('A driver with this email address is already registered.');
+        const session = await this.connection.startSession();
+        let savedDriver: DriverDocument | null = null;
+
+        try {
+            await session.withTransaction(async () => {
+
+                const identityRecord = await this.identityService.createIdentity(
+                    {
+                        email,
+                        password,
+                        phone,
+                        role: Role.DRIVER
+                    },
+                    session,
+                );
+
+                const newDriver = new this.driverModel({
+                    identityId: identityRecord._id,
+                    name,
+                    licenseNumber,
+                    currentVehicleNumber,
+                    fleetStatus: FleetStatus.OFFLINE,
+                });
+
+                const result = await newDriver.save({ session });
+                savedDriver = result as DriverDocument;
+            });
+
+            if (!savedDriver) {
+                throw new InternalServerErrorException('Transaction runtime mismatch: Database profile initialization collapsed.');
+            }
+
+            return savedDriver;
+
+        } catch (error) {
+            throw new InternalServerErrorException(
+                `Onboarding Profile Deployment Aborted Natively: ${(error as Error).message}`
+            );
+        } finally {
+            await session.endSession();
+        }
+    }
+
+    async login(loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: DriverDocument }> {
+        const { accessToken, identity } = await this.identityService.login(loginDriverDto);
+
+        const driverProfile = await this.driverModel.findOne({ identityId: identity._id }).exec();
+        if (!driverProfile) {
+            throw new NotFoundException('Authentication handshake approved but no rich profile parameters exist.');
         }
 
-        const saltRounds = 10;
-        const passwordHash = await bcrypt.hash(password, saltRounds);
-
-        const newDriver = new this.driverModel({
-            name,
-            email,
-            passwordHash,
-            role: Role.DRIVER,
-        });
-
-        return newDriver.save();
+        return {
+            accessToken,
+            driver: driverProfile,
+        };
     }
 
     async updateStatus(driverId: string, updateDriverStatusDto: UpdateDriverStatusDto): Promise<Driver> {
         const { status } = updateDriverStatusDto;
-
         const updatedDriver = await this.driverModel.findByIdAndUpdate(
             driverId,
-            { status },
-            { returnDocument: 'after', runValidators: true }
+            { fleetStatus: status as any }, // Maps to your target fleet status schema mutations
+            { new: true, runValidators: true }
         ).exec();
-
         if (!updatedDriver) {
-            throw new NotFoundException('No registered driver found mapping to this identification token.');
+            throw new NotFoundException('No registered fleet unit matches this identity.');
         }
-
         return updatedDriver;
-    }
-
-    async login(loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: Partial<Driver> }> {
-        const { email, password } = loginDriverDto;
-
-        const driver = await this.driverModel.findOne({ email }).exec();
-        if (!driver) {
-            throw new UnauthorizedException('Invalid login credentials provided.');
-        }
-
-        const isPasswordMatching = await bcrypt.compare(password, driver.passwordHash);
-        if (!isPasswordMatching) {
-            throw new UnauthorizedException('Invalid login credentials provided.');
-        }
-
-        const tokenPayload = { sub: driver._id, email: driver.email, role: Role.DRIVER };
-        const accessToken = await this.jwtService.signAsync(tokenPayload);
-
-        return {
-            accessToken,
-            driver: {
-                _id: driver._id,
-                name: driver.name,
-                email: driver.email,
-                status: driver.status,
-                role: driver.role,
-            },
-        };
     }
 
     async findAll(): Promise<Driver[]> {
         return this.driverModel.find().exec();
     }
-
 }

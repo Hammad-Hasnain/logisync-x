@@ -2,7 +2,7 @@ import { Body, Controller, Post, Patch, Param, UseGuards, Get } from '@nestjs/co
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
-import { Driver } from './schemas/driver.schema';
+import { Driver, DriverDocument } from './schemas/driver.schema';
 import { LoginDriverDto } from './dto/login-driver.dto';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -24,7 +24,7 @@ export class DriversController {
     }
 
     @Post('login')
-    async logIn(@Body() loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: Partial<Driver> }> {
+    async logIn(@Body() loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: DriverDocument }> {
         return this.driversService.login(loginDriverDto);
     }
 
