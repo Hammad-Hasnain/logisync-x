@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, ClientSession } from 'mongoose';
+import { Model, ClientSession, Error } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Identity, IdentityDocument } from './schemas/identity.schema';
@@ -70,7 +70,7 @@ export class IdentityService {
             return { accessToken, identity };
 
         } catch (error: any) {
-            console.error(`Message: ${error.message}`);
+            console.error(`Message: ${(error as Error).message}`);
             throw error;
         }
     }
