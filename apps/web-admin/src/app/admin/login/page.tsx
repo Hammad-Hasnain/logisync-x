@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleLoginSubmit = async (e: React.FormEvent) => {
+    const handleLoginSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setLoading(true);
         const toastId = toast.loading('Initializing authentication stream...');
