@@ -1,56 +1,31 @@
-/**
- * 👑 GLOBAL TYPE-SAFE API NETWORK UTILITY
- * Handles request cycles and injects authorization tokens cleanly.
- */
+import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
-interface RequestOptions extends RequestInit {
-    bodyData?: any;
-}
-
-export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const { bodyData, headers, ...restOptions } = options;
-
-    // 1. Gather any existing token securely from browser memory storage
-    let token: string | null = null;
-    if (typeof window !== 'undefined') {
-        token = window.sessionStorage.getItem('admin_token');
-    }
-
-    // 2. Configure standard centralized network headers
-    const defaultHeaders: Record<string, string> = {
+export const apiClient = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
         'Content-Type': 'application/json',
-    };
+    },
+});
 
-    // 3. Automated Injection Guard: If a token exists, attach it cleanly to the request stream
-    if (token) {
-        defaultHeaders['Authorization'] = `Bearer ${token}`;
+apiClient.interceptors.request.use(
+    (config) => {
+        if (typeof window !== 'undefined') {
+            const token = window.sessionStorage.getItem('admin_token');
+            if (token && config.headers) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const errorMessage = error.response?.data?.message || 'API Pipeline Failed';
+        return Promise.reject(new Error(errorMessage));
     }
-
-    const config: RequestInit = {
-        ...restOptions,
-        headers: {
-            ...defaultHeaders,
-            ...headers,
-        },
-    };
-
-    // 4. Handle serialization securely if payload body data is provided
-    if (bodyData) {
-        config.body = JSON.stringify(bodyData);
-    }
-
-    // 5. Execute HTTP asynchronous network stream handshake
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-
-    // 6. Exception Processing Boundaries
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || `API Pipeline Failed with status code: ${response.status}`;
-        throw new Error(errorMessage);
-    }
-
-    // Return parsed clean JSON response mapping types natively
-    return response.json() as Promise<T>;
-}
+);

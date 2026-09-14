@@ -69,7 +69,7 @@ export class IdentityService {
 
             return { accessToken, identity };
 
-        } catch (error: any) {
+        } catch (error) {
             console.error(`Message: ${(error as Error).message}`);
             throw error;
         }

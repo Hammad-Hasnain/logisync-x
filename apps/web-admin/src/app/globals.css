@@ -1,22 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* 60% Dominant Background & Text */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  /* 30% Secondary Corporate Identity */
+  --primary: #1e3a8a;
+  /* Deep Logistics Blue */
+  --secondary: #3b82f6;
+  /* Supporting Blue */
+
+  /* 10% Accent/Action Color */
+  --accent: #06b6d4;
+  /* Electric Cyan for Sync/CTAs */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Simple utility classes without brand prefix */
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
