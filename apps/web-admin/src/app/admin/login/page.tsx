@@ -10,9 +10,11 @@ import { Role } from '@/enums/role.enum';
 import { AuthLayout } from '@/components/layouts/auth-layout';
 import { FormField } from '@/components/forms/form-field';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function AdminLoginPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -29,10 +31,10 @@ export default function AdminLoginPage() {
                 throw new Error('Access Denied: ...');
             }
 
-            window.sessionStorage.setItem('admin_token', data.accessToken);
-            window.sessionStorage.setItem('admin_profile', JSON.stringify(data.admin));
+            login(data.accessToken, data.admin);
+
             toast.success(`Welcome back, ${data.admin.name}!`, { id: toastId });
-            router.push('/dashboard');
+            router.push('/admin/dashboard');
         } catch (error) {
             toast.error((error as Error).message || 'Authentication failed.', { id: toastId });
         } finally {
