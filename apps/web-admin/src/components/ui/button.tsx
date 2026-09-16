@@ -10,11 +10,13 @@ const buttonVariants = cva(
                 primary: 'bg-accent text-white hover:opacity-90 shadow-lg shadow-accent/20',
                 secondary: 'bg-secondary/10 text-primary hover:bg-secondary/20',
                 outline: 'border border-secondary/30 text-foreground hover:bg-secondary/5',
+                ghost: 'bg-primary/10 text-primary hover:bg-primary/20 transition-colors',
             },
             size: {
                 sm: 'py-1.5 px-3 text-sm',
                 md: 'py-2.5 px-4 text-sm',
                 lg: 'py-3 px-6 text-base',
+                icon: 'w-10 h-10 rounded-full p-0',
             },
         },
         defaultVariants: {
