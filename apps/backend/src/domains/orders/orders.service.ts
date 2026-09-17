@@ -1,10 +1,11 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Order, OrderDocument, OrderStatus } from './schemas/order.schema';
+import { Order, OrderDocument } from './schemas/order.schema';
 import { Connection, Error, Model, Types } from 'mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { TrackingService } from '../tracking/tracking.service';
 import { AssignDriverDto } from '../drivers/dto/assign-driver.dto';
+import { OrderStatus } from 'src/shared/enums/order-status.enum';
 
 @Injectable()
 export class OrdersService {

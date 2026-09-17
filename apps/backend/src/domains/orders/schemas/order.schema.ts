@@ -1,14 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
+import { OrderStatus } from 'src/shared/enums/order-status.enum';
 
-// 1. Centralized Logistics Order Lifecycle Enum
-export enum OrderStatus {
-    PENDING = 'PENDING',
-    PICKED_UP = 'PICKED_UP',
-    IN_TRANSIT = 'IN_TRANSIT',
-    DELIVERED = 'DELIVERED',
-    CANCELLED = 'CANCELLED',
-}
 
 export type OrderDocument = HydratedDocument<Order>
 
