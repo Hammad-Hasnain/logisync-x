@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Order, OrderStatus } from './schemas/order.schema';
+import { Order, OrderDocument, OrderStatus } from './schemas/order.schema';
 import { Connection, Error, Model, Types } from 'mongoose';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { TrackingService } from '../tracking/tracking.service';
@@ -9,12 +9,12 @@ import { AssignDriverDto } from '../drivers/dto/assign-driver.dto';
 @Injectable()
 export class OrdersService {
     constructor(
-        @InjectModel(Order.name) private readonly orderModel: Model<Order>,
+        @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
         private readonly trackingService: TrackingService,
         @InjectConnection() private readonly connection: Connection,
     ) { }
 
-    async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    async create(createOrderDto: CreateOrderDto): Promise<OrderDocument> {
         const { trackingId } = createOrderDto;
 
         const existingOrder = await this.orderModel.findOne({ trackingId }).exec();
@@ -26,7 +26,7 @@ export class OrdersService {
         return newOrder.save();
     }
 
-    async assignDriver(orderId: string, assignDriverDto: AssignDriverDto): Promise<Order> {
+    async assignDriver(orderId: string, assignDriverDto: AssignDriverDto): Promise<OrderDocument> {
         const { driverId } = assignDriverDto;
 
         const session = await this.connection.startSession();
@@ -64,7 +64,7 @@ export class OrdersService {
         }
     }
 
-    async findAll(): Promise<Order[]> {
+    async findAll(): Promise<OrderDocument[]> {
         return this.orderModel.find().exec();
     }
 }
