@@ -7,6 +7,7 @@ import { apiClient } from '@/services/api-client';
 import { AdminLoginResponse } from '@/types/admin.types';
 import { Role } from '@/enums/role.enum';
 import { useAuth } from '@/hooks/use-auth';
+import { API_ENDPOINTS } from '@/lib/api-endpoints';
 
 interface LoginCredentials {
     email: string;
@@ -19,7 +20,7 @@ export function useAdminLogin() {
 
     return useMutation({
         mutationFn: async (credentials: LoginCredentials) => {
-            const { data } = await apiClient.post<AdminLoginResponse>('/admins/login', credentials);
+            const { data } = await apiClient.post<AdminLoginResponse>(API_ENDPOINTS.admin.login, credentials);
 
             if (!data.admin.roles.includes(Role.ADMIN)) {
                 throw new Error('Access Denied: This account has no admin access.');
