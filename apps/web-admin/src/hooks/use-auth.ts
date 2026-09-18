@@ -1,6 +1,6 @@
 'use client';
 
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { adminAtom, rolesAtom, isAuthenticatedAtom, authLoadingAtom, AdminProfile } from '@/store/auth-atoms';
 import { Role } from '@/enums/role.enum';
 import { useRouter } from 'next/navigation';

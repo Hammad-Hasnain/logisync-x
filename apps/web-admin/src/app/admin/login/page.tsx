@@ -1,45 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { LogIn, KeyRound, Mail } from 'lucide-react';
-import { toast } from 'sonner';
-import { apiClient } from '@/services/api-client';
-import { AdminLoginResponse } from '@/types/admin.types';
-import { Role } from '@/enums/role.enum';
 import { AuthLayout } from '@/components/layouts/auth-layout';
 import { FormField } from '@/components/forms/form-field';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
+import { useAdminLogin } from '@/hooks/mutations/use-admin-login';
 
 export default function AdminLoginPage() {
-    const router = useRouter();
-    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
+    const { mutate: login, isPending: loading } = useAdminLogin();
 
     const handleLoginSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
-        setLoading(true);
-        const toastId = toast.loading('Initializing authentication stream...');
-
-        try {
-            const { data } = await apiClient.post<AdminLoginResponse>('/admins/login', { email, password });
-
-            if (!data.admin.roles.includes(Role.ADMIN)) {
-                throw new Error('Access Denied: ...');
-            }
-
-            login(data.accessToken, data.admin);
-
-            toast.success(`Welcome back, ${data.admin.name}!`, { id: toastId });
-            router.push('/admin/dashboard');
-        } catch (error) {
-            toast.error((error as Error).message || 'Authentication failed.', { id: toastId });
-        } finally {
-            setLoading(false);
-        }
+        login({ email, password });
     };
 
     return (
