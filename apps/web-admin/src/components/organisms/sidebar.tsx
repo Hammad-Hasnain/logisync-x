@@ -6,6 +6,7 @@ import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { navItems } from '@/config/nav-items';
 import { useAuth } from '@/hooks/use-auth';
+import { Card } from '../ui/card';
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -13,9 +14,12 @@ export function Sidebar() {
 
     return (
         <aside className="w-[280px] p-4">
-            <div className='h-full transition-all duration-300 ease-in-out rounded-4xl hover:shadow-around/20 overflow-y-auto flex flex-col'>
+            <Card
+                hoverable
+                className="h-full overflow-y-auto flex flex-col p-0 rounded-4xl"
+            >
                 {/* Nav items */}
-                <nav className="flex-1 py-4 px-3 space-y-1 shadow">
+                <nav className="flex-1 py-4 px-3 space-y-1">
                     {navItems
                         .filter((item) => hasAnyRole(item.roles))
                         .map((item) => {
@@ -57,7 +61,7 @@ export function Sidebar() {
                         Logout
                     </button>
                 </div>
-            </div>
+            </Card>
         </aside>
     );
 }

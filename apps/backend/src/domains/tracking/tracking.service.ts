@@ -4,6 +4,7 @@ import { TrackingLog } from './schemas/tracking.schema';
 import { Model, Mongoose, Types } from 'mongoose';
 import { InitializeTrackingDto } from './dto/initialize-tracking.dto';
 import { PushCoordinateDto } from './dto/push-coordinate.dto';
+import { ClientSession } from 'mongoose';
 
 @Injectable()
 export class TrackingService {
@@ -11,7 +12,7 @@ export class TrackingService {
         @InjectModel(TrackingLog.name) private readonly trackingLogModel: Model<TrackingLog>,
     ) { }
 
-    async initializeStream(initializeTrackingDto: InitializeTrackingDto): Promise<TrackingLog> {
+    async initializeStream(initializeTrackingDto: InitializeTrackingDto, session?: ClientSession,): Promise<TrackingLog> {
         const { orderId, driverId } = initializeTrackingDto;
 
         const existingLog = await this.trackingLogModel.findOne({ orderId: new Types.ObjectId(orderId) }).exec();
@@ -20,14 +21,19 @@ export class TrackingService {
             throw new ConflictException('A live telemetry tracking session stream already maps to this order configuration.');
         }
 
-        const newLog = new this.trackingLogModel({
-            orderId: new Types.ObjectId(orderId),
-            driverId: new Types.ObjectId(driverId),
-            coordinates: [],
-            isActiveStream: true,
-        });
+        const [newLog] = await this.trackingLogModel.create(
+            [
+                {
+                    orderId: new Types.ObjectId(orderId),
+                    driverId: new Types.ObjectId(driverId),
+                    coordinates: [],
+                    isActiveStream: true,
+                },
+            ],
+            { session },
+        );
 
-        return newLog.save();
+        return newLog;
     }
 
     async pushLocation(pushCoordinateDto: PushCoordinateDto): Promise<TrackingLog> {

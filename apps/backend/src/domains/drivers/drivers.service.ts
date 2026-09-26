@@ -94,4 +94,11 @@ export class DriversService {
     async findAll(): Promise<Driver[]> {
         return this.driverModel.find().exec();
     }
+
+    async findLookupList() {
+        return this.driverModel
+            .find()
+            .select('_id name')
+            .exec();
+    }
 }

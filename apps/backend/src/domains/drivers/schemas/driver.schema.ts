@@ -28,3 +28,16 @@ export class Driver {
 }
 
 export const DriverSchema = SchemaFactory.createForClass(Driver);
+
+
+// Mongoose transformation
+DriverSchema.set('toJSON', {
+    transform: (_, ret) => {
+        const { _id, __v, ...rest } = ret;
+
+        return {
+            id: _id?.toString(),
+            ...rest
+        };
+    }
+});

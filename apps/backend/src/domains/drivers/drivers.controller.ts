@@ -33,6 +33,12 @@ export class DriversController {
     async getAllDrivers(): Promise<Driver[]> {
         return this.driversService.findAll();
     }
+
+    @Get('lookup')
+    // @UseGuards(AuthGuard('jwt'))
+    async getDriversForDropdown() {
+        return this.driversService.findLookupList();
+    }
 }
 
 

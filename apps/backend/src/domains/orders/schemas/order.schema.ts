@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import { OrderStatus } from 'src/shared/enums/order-status.enum';
+import { Types } from 'mongoose';
 
 
 export type OrderDocument = HydratedDocument<Order>
@@ -10,8 +11,8 @@ export class Order {
     @Prop({ required: true, trim: true, unique: true })
     trackingId!: string; // Unique human-readable bill reference ID (e.g., LGS-10293)
 
-    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'Driver', default: null })
-    assignedDriverId!: MongooseSchema.Types.ObjectId | null;
+    @Prop({ type: Types.ObjectId, ref: 'Driver', default: null })
+    assignedDriverId!: Types.ObjectId | null;
 
     @Prop({ required: true, type: String, enum: Object.values(OrderStatus), default: OrderStatus.PENDING })
     status!: OrderStatus;

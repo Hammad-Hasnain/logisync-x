@@ -29,36 +29,38 @@ export class OrdersService {
 
     async assignDriver(orderId: string, assignDriverDto: AssignDriverDto): Promise<OrderDocument> {
         const { driverId } = assignDriverDto;
-
         const session = await this.connection.startSession();
-        session.startTransaction();
 
         try {
-            const updatedOrder = await this.orderModel.findByIdAndUpdate(
-                orderId,
-                {
-                    assignedDriverId: new Types.ObjectId(driverId),
-                    status: OrderStatus.PICKED_UP,
-                },
-                { returnDocument: 'after', runValidators: true, session }
-            ).exec();
+            let updatedOrder: OrderDocument;
 
-            if (!updatedOrder) {
-                throw new NotFoundException('No registered logistics order found mapping to this identification token.');
-            }
+            await session.withTransaction(async () => {
+                const order = await this.orderModel.findById(orderId).session(session);
+                if (!order) {
+                    throw new NotFoundException('Order not found');
+                }
 
-            await this.trackingService.initializeStream({
-                orderId: orderId,
-                driverId: driverId,
+                order.assignedDriverId = new Types.ObjectId(driverId);
+
+                if (order.status === OrderStatus.PENDING) {
+                    order.status = OrderStatus.PICKED_UP;
+                }
+
+                updatedOrder = await order.save({ session });
+
+                await this.trackingService.initializeStream(
+                    { orderId, driverId },
+                    session,
+                );
             });
 
-            await session.commitTransaction();
-            return updatedOrder;
-
+            return updatedOrder!;
         } catch (error) {
-            await session.abortTransaction();
+            if (error instanceof NotFoundException || error instanceof ConflictException) {
+                throw error;
+            }
             throw new InternalServerErrorException(
-                `Critical Logistics Transaction Failed: Order assignment aborted and rolled back due to telemetry sync error: ${(error as Error).message}`
+                `Order assignment failed: ${(error as Error).message}`,
             );
         } finally {
             await session.endSession();
@@ -67,5 +69,21 @@ export class OrdersService {
 
     async findAll(): Promise<OrderDocument[]> {
         return this.orderModel.find().exec();
+    }
+
+    async findById(id: string): Promise<OrderDocument> {
+        const order = await this.orderModel.findById(id).exec();
+
+        if (!order) {
+            throw new NotFoundException('Order not found');
+        }
+
+        return order;
+    }
+
+    async updateStatus(orderId: string, status: OrderStatus) {
+        const order = await this.orderModel.findByIdAndUpdate(orderId, { status }, { new: true });
+        if (!order) throw new NotFoundException('Order not found');
+        return order;
     }
 }

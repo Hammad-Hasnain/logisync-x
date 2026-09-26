@@ -17,9 +17,9 @@ export class OrdersController {
         return this.ordersService.create(createOrderDto);
     }
 
-    @Patch(':id/assign')
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(Role.ADMIN)
+    @Patch(':id/assign-driver')
+    // @UseGuards(AuthGuard('jwt'), RolesGuard)
+    // @Roles(Role.ADMIN)
     async assignDriver(
         @Param('id') id: string,
         @Body() assignDriverDto: AssignDriverDto,
@@ -28,8 +28,12 @@ export class OrdersController {
     }
 
     @Get()
-    @UseGuards(AuthGuard('jwt'))
     async getAllOrders(): Promise<OrderDocument[]> {
         return this.ordersService.findAll();
+    }
+
+    @Get(':id')
+    async findById(@Param('id') id: string) {
+        return this.ordersService.findById(id);
     }
 }

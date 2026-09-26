@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { ReactNode } from 'react';
+import { Card } from '../ui/card';
 
 interface PageHeaderProps {
     title: string;
@@ -10,9 +11,9 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, action, className }: PageHeaderProps) {
     return (
-        <div
+        <Card
             className={cn(
-                'flex justify-between items-center rounded-4xl p-4 hover:shadow-around/20 transition-all duration-300 ease-in-out',
+                'flex justify-between items-center',
                 className,
             )}
         >
@@ -21,6 +22,6 @@ export function PageHeader({ title, subtitle, action, className }: PageHeaderPro
                 <p className="text-foreground/60 mt-1">{subtitle}</p>
             </div>
             {action}
-        </div>
+        </Card>
     );
 }
