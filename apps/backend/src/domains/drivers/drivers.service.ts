@@ -78,7 +78,7 @@ export class DriversService {
         };
     }
 
-    async updateStatus(driverId: string, updateDriverStatusDto: UpdateDriverStatusDto): Promise<Driver> {
+    async updateStatus(driverId: string, updateDriverStatusDto: UpdateDriverStatusDto): Promise<DriverDocument> {
         const { status } = updateDriverStatusDto;
         const updatedDriver = await this.driverModel.findByIdAndUpdate(
             driverId,
@@ -91,7 +91,7 @@ export class DriversService {
         return updatedDriver;
     }
 
-    async findAll(): Promise<Driver[]> {
+    async findAll(): Promise<DriverDocument[]> {
         return this.driverModel.find().exec();
     }
 

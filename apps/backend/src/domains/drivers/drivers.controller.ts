@@ -2,7 +2,7 @@ import { Body, Controller, Post, Patch, Param, UseGuards, Get } from '@nestjs/co
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
-import { Driver, DriverDocument } from './schemas/driver.schema';
+import { DriverDocument } from './schemas/driver.schema';
 import { LoginDriverDto } from './dto/login-driver.dto';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -11,7 +11,7 @@ export class DriversController {
     constructor(private readonly driversService: DriversService) { }
 
     @Post('signup')
-    async signUp(@Body() createDriverDto: CreateDriverDto): Promise<Driver> {
+    async signUp(@Body() createDriverDto: CreateDriverDto): Promise<DriverDocument> {
         return this.driversService.create(createDriverDto);
     }
 
@@ -19,7 +19,7 @@ export class DriversController {
     async toggleStatus(
         @Param('id') id: string,
         @Body() updateDriverStatusDto: UpdateDriverStatusDto,
-    ): Promise<Driver> {
+    ): Promise<DriverDocument> {
         return this.driversService.updateStatus(id, updateDriverStatusDto);
     }
 
@@ -30,7 +30,7 @@ export class DriversController {
 
     @Get()
     @UseGuards(AuthGuard('jwt'))
-    async getAllDrivers(): Promise<Driver[]> {
+    async getAllDrivers(): Promise<DriverDocument[]> {
         return this.driversService.findAll();
     }
 
