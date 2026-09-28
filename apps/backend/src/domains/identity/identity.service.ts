@@ -39,7 +39,7 @@ export class IdentityService {
                     passwordHash,
                     phone,
                     roles: [role],
-                    status: IdentityStatus.ACTIVE,
+                    status: IdentityStatus.PENDING,
                     lastLoginAt: new Date()
                 },
             ],
