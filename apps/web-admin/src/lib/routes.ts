@@ -7,7 +7,9 @@ export const ROUTES = {
             new: '/admin/orders/new',
             detail: (id: string) => `/admin/orders/${id}`,
         },
-        drivers: '/admin/drivers',
-        driverDetail: (id: string) => `/admin/drivers/${id}`,
+        drivers: {
+            list: '/admin/drivers',
+            detail: (id: string) => `/admin/drivers/${id}`,
+        },
     },
 } as const;

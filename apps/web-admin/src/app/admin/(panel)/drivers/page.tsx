@@ -3,6 +3,7 @@
 import { PageHeader } from '@/components/organisms/page-header';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
+import { DriversTable } from './_sections/drivers-table';
 
 export default function DriversPage() {
     return (
@@ -16,6 +17,9 @@ export default function DriversPage() {
                     </Button>
                 }
             />
+            <div className="mt-6">
+                <DriversTable />
+            </div>
         </>
     );
 }

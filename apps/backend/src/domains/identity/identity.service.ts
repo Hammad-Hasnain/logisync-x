@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ClientSession, Error } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -75,4 +75,11 @@ export class IdentityService {
         }
     }
 
+    async updateStatus(identityId: string, status: IdentityStatus): Promise<IdentityDocument> {
+        const identity = await this.identityModel.findByIdAndUpdate(identityId, { status }, { new: true });
+        if (!identity) {
+            throw new NotFoundException('Identity not found');
+        }
+        return identity;
+    }
 }

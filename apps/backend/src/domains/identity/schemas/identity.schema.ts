@@ -27,3 +27,10 @@ export class Identity {
 }
 
 export const IdentitySchema = SchemaFactory.createForClass(Identity);
+
+IdentitySchema.set('toJSON', {
+    transform: (_, ret) => {
+        const { _id, __v, passwordHash, ...rest } = ret;
+        return { id: _id?.toString(), ...rest };
+    },
+});

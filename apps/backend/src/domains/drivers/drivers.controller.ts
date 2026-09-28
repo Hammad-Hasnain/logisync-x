@@ -4,6 +4,7 @@ import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
 import { DriverDocument } from './schemas/driver.schema';
 import { LoginDriverDto } from './dto/login-driver.dto';
+import { UpdateIdentityStatusDto } from './dto/update-identity-status.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('drivers')
@@ -27,17 +28,29 @@ export class DriversController {
     async logIn(@Body() loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: DriverDocument }> {
         return this.driversService.login(loginDriverDto);
     }
-
+ 
     @Get()
     @UseGuards(AuthGuard('jwt'))
-    async getAllDrivers(): Promise<DriverDocument[]> {
+    async findAll() {
         return this.driversService.findAll();
     }
 
     @Get('lookup')
-    // @UseGuards(AuthGuard('jwt'))
-    async getDriversForDropdown() {
+    @UseGuards(AuthGuard('jwt'))
+    async lookup() {
         return this.driversService.findLookupList();
+    }
+
+    @Patch(':id/identity-status')
+    @UseGuards(AuthGuard('jwt'))
+    async updateIdentityStatus(@Param('id') id: string, @Body() dto: UpdateIdentityStatusDto) {
+        return this.driversService.updateIdentityStatus(id, dto.status);
+    }
+
+    @Get(':id')
+    @UseGuards(AuthGuard('jwt'))
+    async findById(@Param('id') id: string) {
+        return this.driversService.findById(id);
     }
 }
 

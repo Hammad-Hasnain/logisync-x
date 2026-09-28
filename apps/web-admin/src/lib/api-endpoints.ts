@@ -12,6 +12,9 @@ export const API_ENDPOINTS = {
         updateStatus: (id: string) => `/orders/${id}/status`,
     },
     drivers: {
+        list: '/drivers',
         lookup: '/drivers/lookup',
+        detail: (id: string) => `/drivers/${id}`,
+        updateIdentityStatus: (id: string) => `/drivers/${id}/identity-status`,
     },
 } as const;

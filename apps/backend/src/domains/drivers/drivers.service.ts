@@ -9,6 +9,9 @@ import { LoginDriverDto } from './dto/login-driver.dto';
 import { IdentityService } from '../identity/identity.service';
 import { FleetStatus } from 'src/shared/enums/fleet-status.enum';
 import { Role } from 'src/shared/enums/role.enum';
+import { DriverResponseDto } from './dto/driver-response.dto';
+import { IdentityDocument } from '../identity/schemas/identity.schema';
+import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
 
 @Injectable()
 export class DriversService {
@@ -16,7 +19,25 @@ export class DriversService {
         @InjectModel(Driver.name) private readonly driverModel: Model<Driver>,
         private readonly identityService: IdentityService,
         @InjectConnection() private readonly connection: Connection,
+
     ) { }
+
+    private toResponseDto(driver: DriverDocument): DriverResponseDto {
+        const identity = driver.identityId as unknown as IdentityDocument;
+
+        return {
+            id: driver._id.toString(),
+            identityId: identity._id.toString(),
+            name: driver.name,
+            email: identity.email,
+            phone: identity.phone,
+            licenseNumber: driver.licenseNumber,
+            vehicleNumber: driver.vehicleNumber,
+            fleetStatus: driver.fleetStatus,
+            identityStatus: identity.status,
+        };
+    }
+
 
     async create(createDriverDto: CreateDriverDto): Promise<DriverDocument> {
         const { name, email, password, phone, licenseNumber, vehicleNumber } = createDriverDto;
@@ -91,8 +112,17 @@ export class DriversService {
         return updatedDriver;
     }
 
-    async findAll(): Promise<DriverDocument[]> {
-        return this.driverModel.find().exec();
+      async findAll(): Promise<DriverResponseDto[]> {
+        const drivers = await this.driverModel.find().populate('identityId').exec();
+        return drivers.map((d) => this.toResponseDto(d));
+    }
+
+    async findById(id: string): Promise<DriverResponseDto> {
+        const driver = await this.driverModel.findById(id).populate('identityId').exec();
+        if (!driver) {
+            throw new NotFoundException('Driver not found');
+        }
+        return this.toResponseDto(driver);
     }
 
     async findLookupList() {
@@ -100,5 +130,17 @@ export class DriversService {
             .find()
             .select('_id name')
             .exec();
+    }
+
+    async updateIdentityStatus(driverId: string, status: IdentityStatus): Promise<DriverResponseDto> {
+        const driver = await this.driverModel.findById(driverId);
+        if (!driver) {
+            throw new NotFoundException('Driver not found');
+        }
+
+        await this.identityService.updateStatus(driver.identityId.toString(), status);
+
+        const updated = await this.driverModel.findById(driverId).populate('identityId').exec();
+        return this.toResponseDto(updated!);
     }
 }
