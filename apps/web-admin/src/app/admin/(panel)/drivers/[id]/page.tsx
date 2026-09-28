@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/organisms/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,9 +31,14 @@ export default function DriverDetailPage() {
                 title={driver.name}
                 subtitle="Driver profile and account status."
                 action={
-                    <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.drivers.list)}>
-                        <ArrowLeft size={20} />
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.drivers.edit(driver.id))}>
+                            <Pencil size={18} />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.drivers.list)}>
+                            <ArrowLeft size={20} />
+                        </Button>
+                    </div>
                 }
             />
 

@@ -6,6 +6,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { TrackingService } from '../tracking/tracking.service';
 import { AssignDriverDto } from '../drivers/dto/assign-driver.dto';
 import { OrderStatus } from 'src/shared/enums/order-status.enum';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -84,6 +85,14 @@ export class OrdersService {
     async updateStatus(orderId: string, status: OrderStatus) {
         const order = await this.orderModel.findByIdAndUpdate(orderId, { status }, { new: true });
         if (!order) throw new NotFoundException('Order not found');
+        return order;
+    }
+
+    async update(id: string, dto: UpdateOrderDto): Promise<OrderDocument> {
+        const order = await this.orderModel.findByIdAndUpdate(id, dto, { returnDocument: 'after', runValidators: true });
+        if (!order) {
+            throw new NotFoundException('Order not found');
+        }
         return order;
     }
 }

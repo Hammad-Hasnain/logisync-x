@@ -7,6 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../../shared/guards/roles.guard';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { Role } from '../../shared/enums/role.enum';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -35,5 +36,11 @@ export class OrdersController {
     @Get(':id')
     async findById(@Param('id') id: string) {
         return this.ordersService.findById(id);
+    }
+
+    @Patch(':id')
+    @UseGuards(AuthGuard('jwt'))
+    async update(@Param('id') id: string, @Body() dto: UpdateOrderDto) {
+        return this.ordersService.update(id, dto);
     }
 }

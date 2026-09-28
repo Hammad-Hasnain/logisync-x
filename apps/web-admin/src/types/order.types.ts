@@ -18,3 +18,15 @@ export interface Order extends CreateOrderPayload {
     status: OrderStatus;
     assignedDriverId: string | null;
 }
+
+export interface UpdateOrderPayload {
+    senderName: string;
+    senderPhone: string;
+    receiverName: string;
+    receiverPhone: string;
+    originAddress: string;
+    destinationAddress: string;
+    parcelDescription: string;
+    weightKg: number;
+    billingAmount: number;
+}

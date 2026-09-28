@@ -12,6 +12,7 @@ import { Role } from 'src/shared/enums/role.enum';
 import { DriverResponseDto } from './dto/driver-response.dto';
 import { IdentityDocument } from '../identity/schemas/identity.schema';
 import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
+import { UpdateDriverDto } from './dto/update-driver.dto';
 
 @Injectable()
 export class DriversService {
@@ -112,7 +113,7 @@ export class DriversService {
         return updatedDriver;
     }
 
-      async findAll(): Promise<DriverResponseDto[]> {
+    async findAll(): Promise<DriverResponseDto[]> {
         const drivers = await this.driverModel.find().populate('identityId').exec();
         return drivers.map((d) => this.toResponseDto(d));
     }
@@ -142,5 +143,16 @@ export class DriversService {
 
         const updated = await this.driverModel.findById(driverId).populate('identityId').exec();
         return this.toResponseDto(updated!);
+    }
+
+    async update(id: string, dto: UpdateDriverDto): Promise<DriverResponseDto> {
+        const driver = await this.driverModel.findByIdAndUpdate(id, dto, { returnDocument: 'after', runValidators: true });
+
+        if (!driver) {
+            throw new NotFoundException('Driver not found');
+        }
+
+        const populated = await this.driverModel.findById(id).populate('identityId').exec();
+        return this.toResponseDto(populated!);
     }
 }

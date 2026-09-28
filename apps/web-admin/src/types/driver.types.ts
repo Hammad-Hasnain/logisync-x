@@ -1,6 +1,21 @@
 import { FleetStatus } from '@/enums/fleet-status.enum';
 import { IdentityStatus } from '@/enums/identity-status.enum';
 
+export interface CreateDriverPayload {
+    name: string;
+    email: string;
+    password: string;
+    phone: string;
+    licenseNumber: string;
+    vehicleNumber: string;
+}
+
+export interface UpdateDriverPayload {
+    name: string;
+    licenseNumber: string;
+    vehicleNumber: string;
+}
+
 export interface Driver {
     id: string;
     identityId: string;

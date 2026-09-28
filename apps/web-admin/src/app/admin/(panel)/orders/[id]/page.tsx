@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/organisms/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,9 +35,14 @@ export default function OrderDetailPage() {
                 title={`Order ${order.trackingId}`}
                 subtitle="Full shipment details and assignment."
                 action={
-                    <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.orders.list)}>
-                        <ArrowLeft size={20} />
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.orders.edit(order.id))}>
+                            <Pencil size={18} />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.orders.list)}>
+                            <ArrowLeft size={20} />
+                        </Button>
+                    </div>
                 }
             />
 

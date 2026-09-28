@@ -6,6 +6,7 @@ import { DriverDocument } from './schemas/driver.schema';
 import { LoginDriverDto } from './dto/login-driver.dto';
 import { UpdateIdentityStatusDto } from './dto/update-identity-status.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { UpdateDriverDto } from './dto/update-driver.dto';
 
 @Controller('drivers')
 export class DriversController {
@@ -28,7 +29,7 @@ export class DriversController {
     async logIn(@Body() loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: DriverDocument }> {
         return this.driversService.login(loginDriverDto);
     }
- 
+
     @Get()
     @UseGuards(AuthGuard('jwt'))
     async findAll() {
@@ -51,6 +52,12 @@ export class DriversController {
     @UseGuards(AuthGuard('jwt'))
     async findById(@Param('id') id: string) {
         return this.driversService.findById(id);
+    }
+
+    @Patch(':id')
+    @UseGuards(AuthGuard('jwt'))
+    async update(@Param('id') id: string, @Body() dto: UpdateDriverDto) {
+        return this.driversService.update(id, dto);
     }
 }
 
