@@ -17,7 +17,7 @@ export class Driver {
     licenseNumber!: string;
 
     @Prop({ required: true, trim: true })
-    currentVehicleNumber!: string;
+    vehicleNumber!: string;
 
     @Prop({
         type: String,

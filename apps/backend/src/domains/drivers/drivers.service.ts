@@ -19,7 +19,7 @@ export class DriversService {
     ) { }
 
     async create(createDriverDto: CreateDriverDto): Promise<DriverDocument> {
-        const { name, email, password, phone, licenseNumber, currentVehicleNumber } = createDriverDto;
+        const { name, email, password, phone, licenseNumber, vehicleNumber } = createDriverDto;
 
         const session = await this.connection.startSession();
         let savedDriver: DriverDocument | null = null;
@@ -41,7 +41,7 @@ export class DriversService {
                     identityId: identityRecord._id,
                     name,
                     licenseNumber,
-                    currentVehicleNumber,
+                    vehicleNumber,
                     fleetStatus: FleetStatus.OFFLINE,
                 });
 

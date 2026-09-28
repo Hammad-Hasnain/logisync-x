@@ -22,5 +22,5 @@ export class CreateDriverDto {
 
     @IsString()
     @IsNotEmpty({ message: 'Target vehicle license plate identification registry token is required.' })
-    currentVehicleNumber!: string;
+    vehicleNumber!: string;
 }
