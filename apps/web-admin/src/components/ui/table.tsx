@@ -3,7 +3,7 @@ import { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from 'react';
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
     return (
-        <div className="w-full overflow-x-auto rounded-2xl border border-secondary/10">
+        <div className="w-full overflow-x-auto rounded-4xl shadow-around/20 transition-all duration-300 ease-in-out">
             <table className={cn('w-full text-sm border-collapse', className)} {...props} />
         </div>
     );
