@@ -51,7 +51,6 @@ export function OrdersTable() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => router.push(ROUTES.admin.orders.detail(order.id))}
-                                className='bg-transparent'
                             >
                                 <Eye size={18} />
                             </Button>
