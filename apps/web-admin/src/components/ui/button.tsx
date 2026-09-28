@@ -11,6 +11,7 @@ const buttonVariants = cva(
                 secondary: 'bg-secondary/10 text-primary hover:bg-secondary/20',
                 outline: 'border border-secondary/30 text-foreground hover:bg-secondary/5',
                 ghost: 'bg-primary/10 text-primary hover:bg-primary/20 transition-colors',
+                success: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200',
             },
             size: {
                 sm: 'py-1.5 px-3 text-sm',

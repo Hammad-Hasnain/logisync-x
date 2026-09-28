@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye } from 'lucide-react';
+import { Eye, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -44,9 +44,14 @@ export function DriversTable() {
                             </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.drivers.detail(driver.id))}>
-                                <Eye size={18} />
-                            </Button>
+                            <div className="flex justify-end gap-1">
+                                <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.drivers.detail(driver.id))}>
+                                    <Eye size={18} />
+                                </Button>
+                                <Button variant="success" size="icon" onClick={() => router.push(ROUTES.admin.drivers.edit(driver.id))}>
+                                    <Pencil size={18} />
+                                </Button>
+                            </div>
                         </TableCell>
                     </TableRow>
                 ))}

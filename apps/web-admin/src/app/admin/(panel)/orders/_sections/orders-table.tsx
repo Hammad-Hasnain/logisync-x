@@ -8,7 +8,7 @@ import { ORDER_STATUS_BADGE_VARIANT } from '@/lib/order-status-styles';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/lib/routes';
 import { useRouter } from 'next/navigation';
-import { Eye } from 'lucide-react';
+import { Eye, Pencil } from 'lucide-react';
 import { StateMessage } from '@/components/ui/state-message';
 
 export function OrdersTable() {
@@ -47,13 +47,14 @@ export function OrdersTable() {
                         <TableCell>{driverName(order.assignedDriverId)}</TableCell>
                         <TableCell>Rs. {order.billingAmount.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => router.push(ROUTES.admin.orders.detail(order.id))}
-                            >
-                                <Eye size={18} />
-                            </Button>
+                            <div className="flex justify-end gap-1">
+                                <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.orders.detail(order.id))}>
+                                    <Eye size={18} />
+                                </Button>
+                                <Button variant="success" size="icon" onClick={() => router.push(ROUTES.admin.orders.edit(order.id))}>
+                                    <Pencil size={18} />
+                                </Button>
+                            </div>
                         </TableCell>
                     </TableRow>
                 ))}
