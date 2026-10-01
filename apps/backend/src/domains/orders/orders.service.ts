@@ -98,7 +98,7 @@ export class OrdersService {
     }
 
     async updateStatus(orderId: string, status: OrderStatus) {
-        const order = await this.orderModel.findByIdAndUpdate(orderId, { status }, { new: true });
+        const order = await this.orderModel.findByIdAndUpdate(orderId, { status }, { returnDocument: 'after' });
         if (!order) throw new NotFoundException('Order not found');
         return order;
     }

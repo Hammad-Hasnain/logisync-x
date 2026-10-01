@@ -76,7 +76,7 @@ export class IdentityService {
     }
 
     async updateStatus(identityId: string, status: IdentityStatus): Promise<IdentityDocument> {
-        const identity = await this.identityModel.findByIdAndUpdate(identityId, { status }, { new: true });
+        const identity = await this.identityModel.findByIdAndUpdate(identityId, { status }, { returnDocument: 'after' });
         if (!identity) {
             throw new NotFoundException('Identity not found');
         }
