@@ -1,3 +1,4 @@
+
 export const API_ENDPOINTS = {
     admin: {
         login: '/admins/login',
@@ -19,5 +20,6 @@ export const API_ENDPOINTS = {
         update: (id: string) => `/drivers/${id}`,
         detail: (id: string) => `/drivers/${id}`,
         updateIdentityStatus: (id: string) => `/drivers/${id}/identity-status`,
+        updateFleetStatus: (id: string) => `/drivers/${id}/fleet-status`,
     },
 } as const;

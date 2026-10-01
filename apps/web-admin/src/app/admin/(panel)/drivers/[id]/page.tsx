@@ -14,6 +14,8 @@ import { useUpdateIdentityStatus } from '@/hooks/mutations/use-update-identity-s
 import { IdentityStatus } from '@/enums/identity-status.enum';
 import { FLEET_STATUS_BADGE_VARIANT, IDENTITY_STATUS_BADGE_VARIANT } from '@/lib/driver-status-styles';
 import { ROUTES } from '@/lib/routes';
+import { useUpdateFleetStatus } from '@/hooks/mutations/use-update-fleet-status';
+import { FleetStatus } from '@/enums/fleet-status.enum';
 
 export default function DriverDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -21,6 +23,7 @@ export default function DriverDetailPage() {
 
     const { data: driver, isLoading } = useDriver(id);
     const { mutate: updateStatus, isPending } = useUpdateIdentityStatus();
+    const { mutate: updateFleetStatus, isPending: isFleetPending } = useUpdateFleetStatus();
 
     if (isLoading) return <StateMessage variant="loading" message="Loading driver..." />;
     if (!driver) return <StateMessage variant="empty" message="Driver not found." />;
@@ -57,22 +60,48 @@ export default function DriverDetailPage() {
                     />
                 </Card>
 
-                {/* Right: quick action — sirf identity status editable */}
+                {/* Right: quick action */}
                 <Card className="p-6 h-fit space-y-3">
-                    <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider">Account Status</h3>
-                    <Badge variant={IDENTITY_STATUS_BADGE_VARIANT[driver.identityStatus]}>{driver.identityStatus}</Badge>
-                    <Select
-                        value={driver.identityStatus}
-                        disabled={isPending}
-                        onChange={(e) => updateStatus({ driverId: driver.id, status: e.target.value as IdentityStatus })}
-                    >
-                        {Object.values(IdentityStatus).map((status) => (
-                            <option key={status} value={status}>
-                                {status}
-                            </option>
-                        ))}
-                    </Select>
+                    <div>
+                        <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-2">Account Status</h3>
+                        <div className="mb-3">
+                            <Badge variant={IDENTITY_STATUS_BADGE_VARIANT[driver.identityStatus]}>{driver.identityStatus}</Badge>
+                        </div>
+                        <Select
+                            value={driver.identityStatus}
+                            disabled={isPending}
+                            onChange={(e) => updateStatus({ driverId: driver.id, status: e.target.value as IdentityStatus })}
+                        >
+                            {Object.values(IdentityStatus).map((status) => (
+                                <option key={status} value={status}>
+                                    {status}
+                                </option>
+                            ))}
+                        </Select>
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-2">
+                            Fleet Status
+                        </h3>
+                        <div className="mb-3">
+                            <Badge variant={FLEET_STATUS_BADGE_VARIANT[driver.fleetStatus]}>
+                                {driver.fleetStatus}
+                            </Badge>
+                        </div>
+                        <Select
+                            value={driver.fleetStatus}
+                            disabled={isFleetPending}
+                            onChange={(e) => updateFleetStatus({ driverId: driver.id, status: e.target.value as FleetStatus })}
+                        >
+                            {Object.values(FleetStatus).map((status) => (
+                                <option key={status} value={status}>
+                                    {status}
+                                </option>
+                            ))}
+                        </Select>
+                    </div>
                 </Card>
+
             </div>
         </>
     );
