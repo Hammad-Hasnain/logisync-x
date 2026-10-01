@@ -17,14 +17,6 @@ export class DriversController {
         return this.driversService.create(createDriverDto);
     }
 
-    @Patch(':id/status')
-    async toggleStatus(
-        @Param('id') id: string,
-        @Body() updateDriverStatusDto: UpdateDriverStatusDto,
-    ): Promise<DriverDocument> {
-        return this.driversService.updateStatus(id, updateDriverStatusDto);
-    }
-
     @Post('login')
     async logIn(@Body() loginDriverDto: LoginDriverDto): Promise<{ accessToken: string; driver: DriverDocument }> {
         return this.driversService.login(loginDriverDto);
@@ -42,17 +34,26 @@ export class DriversController {
         return this.driversService.findLookupList();
     }
 
+    @Get(':id')
+    @UseGuards(AuthGuard('jwt'))
+    async findById(@Param('id') id: string) {
+        return this.driversService.findById(id);
+    }
+
+    @Patch(':id/fleet-status')
+    async toggleStatus(
+        @Param('id') id: string,
+        @Body() updateDriverStatusDto: UpdateDriverStatusDto,
+    ): Promise<DriverDocument> {
+        return this.driversService.updateFleetStatus(id, updateDriverStatusDto);
+    }
+
     @Patch(':id/identity-status')
     @UseGuards(AuthGuard('jwt'))
     async updateIdentityStatus(@Param('id') id: string, @Body() dto: UpdateIdentityStatusDto) {
         return this.driversService.updateIdentityStatus(id, dto.status);
     }
 
-    @Get(':id')
-    @UseGuards(AuthGuard('jwt'))
-    async findById(@Param('id') id: string) {
-        return this.driversService.findById(id);
-    }
 
     @Patch(':id')
     @UseGuards(AuthGuard('jwt'))

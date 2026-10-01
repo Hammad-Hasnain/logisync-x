@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Connection } from 'mongoose';
+import { Model, Connection, ClientSession } from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Driver, DriverDocument } from './schemas/driver.schema';
 import { CreateDriverDto } from './dto/create-driver.dto';
@@ -100,19 +100,6 @@ export class DriversService {
         };
     }
 
-    async updateStatus(driverId: string, updateDriverStatusDto: UpdateDriverStatusDto): Promise<DriverDocument> {
-        const { status } = updateDriverStatusDto;
-        const updatedDriver = await this.driverModel.findByIdAndUpdate(
-            driverId,
-            { fleetStatus: status as any }, // Maps to your target fleet status schema mutations
-            { new: true, runValidators: true }
-        ).exec();
-        if (!updatedDriver) {
-            throw new NotFoundException('No registered fleet unit matches this identity.');
-        }
-        return updatedDriver;
-    }
-
     async findAll(): Promise<DriverResponseDto[]> {
         const drivers = await this.driverModel.find().populate('identityId').exec();
         return drivers.map((d) => this.toResponseDto(d));
@@ -124,6 +111,14 @@ export class DriversService {
             throw new NotFoundException('Driver not found');
         }
         return this.toResponseDto(driver);
+    }
+
+    async findByIdWithSession(id: string, session: ClientSession): Promise<DriverDocument> {
+        const driver = await this.driverModel.findById(id).session(session);
+        if (!driver) {
+            throw new NotFoundException('Driver not found');
+        }
+        return driver;
     }
 
     async findLookupList() {
@@ -155,4 +150,29 @@ export class DriversService {
         const populated = await this.driverModel.findById(id).populate('identityId').exec();
         return this.toResponseDto(populated!);
     }
+
+    async updateFleetStatus(
+        driverId: string,
+        updateDriverStatusDto: UpdateDriverStatusDto,
+        session?: ClientSession
+    ): Promise<DriverDocument> {
+        const { status } = updateDriverStatusDto;
+
+        const updatedDriver = await this.driverModel.findByIdAndUpdate(
+            driverId,
+            { fleetStatus: status },
+            {
+                returnDocument: 'after',
+                runValidators: true,
+                session
+            }
+        ).exec();
+
+        if (!updatedDriver) {
+            throw new NotFoundException('No registered fleet unit matches this identity.');
+        }
+
+        return updatedDriver;
+    }
+
 }

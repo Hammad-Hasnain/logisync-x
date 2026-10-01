@@ -7,12 +7,15 @@ import { TrackingService } from '../tracking/tracking.service';
 import { AssignDriverDto } from '../drivers/dto/assign-driver.dto';
 import { OrderStatus } from 'src/shared/enums/order-status.enum';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { DriversService } from '../drivers/drivers.service';
+import { FleetStatus } from 'src/shared/enums/fleet-status.enum';
 
 @Injectable()
 export class OrdersService {
     constructor(
         @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
         private readonly trackingService: TrackingService,
+        private readonly driversService: DriversService,
         @InjectConnection() private readonly connection: Connection,
     ) { }
 
@@ -41,13 +44,25 @@ export class OrdersService {
                     throw new NotFoundException('Order not found');
                 }
 
+                const driver = await this.driversService.findByIdWithSession(driverId, session);
+
+                if (!driver) {
+                    throw new NotFoundException('Driver not found');
+                }
+
+                if (driver.fleetStatus !== FleetStatus.ONLINE) {
+                    throw new ConflictException('Driver is not available for assignment');
+                }
+
                 order.assignedDriverId = new Types.ObjectId(driverId);
 
                 if (order.status === OrderStatus.PENDING) {
-                    order.status = OrderStatus.PICKED_UP;
+                    order.status = OrderStatus.ASSIGNED;
                 }
 
                 updatedOrder = await order.save({ session });
+
+                await this.driversService.updateFleetStatus(driverId, { status: FleetStatus.ON_TRIP }, session);
 
                 await this.trackingService.initializeStream(
                     { orderId, driverId },
