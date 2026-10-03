@@ -123,7 +123,7 @@ export class DriversService {
 
     async findLookupList() {
         return this.driverModel
-            .find()
+            .find({ fleetStatus: FleetStatus.ONLINE })
             .select('_id name')
             .exec();
     }
