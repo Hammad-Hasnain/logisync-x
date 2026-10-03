@@ -95,7 +95,7 @@ export default function OrderDetailPage() {
                             onChange={(e) => assignDriver({ orderId: order.id, driverId: e.target.value })}
                         >
                             <option value="" disabled>
-                                Unassigned
+                                {drivers?.length === 0 ? "No drivers available" : "Unassigned"}
                             </option>
                             {drivers?.map((driver) => (
                                 <option key={driver.id} value={driver.id}>
