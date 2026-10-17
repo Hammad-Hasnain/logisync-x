@@ -9,6 +9,11 @@ import { AdminResponseDto } from './dto/admin-response.dto';
 export class AdminsController {
     constructor(private readonly adminsService: AdminsService) { }
 
+    @Post()
+    async createAdmin(@Body() createAdminDto: CreateAdminDto) {
+        return this.adminsService.createAdmin(createAdminDto);
+    }
+
     // @Post('signup')
     // async signUp(@Body() createAdminDto: CreateAdminDto): Promise<AdminDocument> {
     //     return this.adminsService.create(createAdminDto);

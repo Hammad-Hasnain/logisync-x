@@ -1,12 +1,10 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ClientSession, Error } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Identity, IdentityDocument } from './schemas/identity.schema';
 import { CreateIdentityDto } from './dto/create-identity.dto';
-import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
-import { LoginDriverDto } from '../drivers/dto/login-driver.dto';
 
 @Injectable()
 export class IdentityService {
@@ -19,7 +17,7 @@ export class IdentityService {
         createIdentityDto: CreateIdentityDto,
         session?: ClientSession,
     ): Promise<IdentityDocument> {
-        const { email, password, phone, role } = createIdentityDto;
+        const { email, password, phone, role, status } = createIdentityDto;
 
         const existing = await this.identityModel
             .findOne({ email })
@@ -39,7 +37,7 @@ export class IdentityService {
                     passwordHash,
                     phone,
                     role,
-                    status: IdentityStatus.PENDING,
+                    ...(status && { status })
                 },
             ],
             { session },
