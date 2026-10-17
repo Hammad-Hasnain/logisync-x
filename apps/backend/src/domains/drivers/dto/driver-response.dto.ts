@@ -1,4 +1,4 @@
-import { FleetStatus } from 'src/shared/enums/duty-status.enum';
+import { DutyStatus } from 'src/shared/enums/duty-status.enum';
 import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
 
 export class DriverResponseDto {
@@ -9,6 +9,6 @@ export class DriverResponseDto {
     phone!: string;
     licenseNumber!: string;
     vehicleNumber!: string;
-    fleetStatus!: FleetStatus;
+    fleetStatus!: DutyStatus;
     identityStatus!: IdentityStatus;
 }

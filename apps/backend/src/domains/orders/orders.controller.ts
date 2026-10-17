@@ -13,34 +13,34 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 export class OrdersController {
     constructor(private readonly ordersService: OrdersService) { }
 
-    @Post('create')
-    async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<OrderDocument> {
-        return this.ordersService.create(createOrderDto);
-    }
+    // @Post('create')
+    // async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<OrderDocument> {
+    //     return this.ordersService.create(createOrderDto);
+    // }
 
-    @Patch(':id/assign-driver')
-    // @UseGuards(AuthGuard('jwt'), RolesGuard)
-    // @Roles(Role.ADMIN)
-    async assignDriver(
-        @Param('id') id: string,
-        @Body() assignDriverDto: AssignDriverDto,
-    ): Promise<OrderDocument> {
-        return this.ordersService.assignDriver(id, assignDriverDto);
-    }
+    // @Patch(':id/assign-driver')
+    // // @UseGuards(AuthGuard('jwt'), RolesGuard)
+    // // @Roles(Role.ADMIN)
+    // async assignDriver(
+    //     @Param('id') id: string,
+    //     @Body() assignDriverDto: AssignDriverDto,
+    // ): Promise<OrderDocument> {
+    //     return this.ordersService.assignDriver(id, assignDriverDto);
+    // }
 
-    @Get()
-    async getAllOrders(): Promise<OrderDocument[]> {
-        return this.ordersService.findAll();
-    }
+    // @Get()
+    // async getAllOrders(): Promise<OrderDocument[]> {
+    //     return this.ordersService.findAll();
+    // }
 
-    @Get(':id')
-    async findById(@Param('id') id: string) {
-        return this.ordersService.findById(id);
-    }
+    // @Get(':id')
+    // async findById(@Param('id') id: string) {
+    //     return this.ordersService.findById(id);
+    // }
 
-    @Patch(':id')
-    @UseGuards(AuthGuard('jwt'))
-    async update(@Param('id') id: string, @Body() dto: UpdateOrderDto) {
-        return this.ordersService.update(id, dto);
-    }
+    // @Patch(':id')
+    // @UseGuards(AuthGuard('jwt'))
+    // async update(@Param('id') id: string, @Body() dto: UpdateOrderDto) {
+    //     return this.ordersService.update(id, dto);
+    // }
 }

@@ -9,14 +9,14 @@ import { AdminResponseDto } from './dto/admin-response.dto';
 export class AdminsController {
     constructor(private readonly adminsService: AdminsService) { }
 
-    @Post('signup')
-    async signUp(@Body() createAdminDto: CreateAdminDto): Promise<AdminDocument> {
-        return this.adminsService.create(createAdminDto);
-    }
+    // @Post('signup')
+    // async signUp(@Body() createAdminDto: CreateAdminDto): Promise<AdminDocument> {
+    //     return this.adminsService.create(createAdminDto);
+    // }
 
-    @Post('login')
-    async login(@Body() loginAdminDto: LoginAdminDto): Promise<{ accessToken: string; admin: AdminResponseDto }> {
-        return this.adminsService.login(loginAdminDto)
-    }
+    // @Post('login')
+    // async login(@Body() loginAdminDto: LoginAdminDto): Promise<{ accessToken: string; admin: AdminResponseDto }> {
+    //     return this.adminsService.login(loginAdminDto)
+    // }
 
 }

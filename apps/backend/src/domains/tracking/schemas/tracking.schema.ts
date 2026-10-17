@@ -15,7 +15,7 @@ export class LocationCoordinate {
   timestamp!: Date;
 }
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'tracking_logs' })
 export class TrackingLog {
   @Prop({ type: Types.ObjectId, ref: 'Order', required: true, unique: true })
   orderId!: Types.ObjectId;

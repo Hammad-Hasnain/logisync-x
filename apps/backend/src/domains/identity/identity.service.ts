@@ -38,9 +38,8 @@ export class IdentityService {
                     email,
                     passwordHash,
                     phone,
-                    roles: [role],
+                    role,
                     status: IdentityStatus.PENDING,
-                    lastLoginAt: new Date()
                 },
             ],
             { session },
@@ -49,37 +48,37 @@ export class IdentityService {
         return identity;
     }
 
-    async login(loginDto: LoginDriverDto): Promise<{ accessToken: string, identity: IdentityDocument }> {
-        try {
-            const { email, password } = loginDto;
+    // async login(loginDto: LoginDriverDto): Promise<{ accessToken: string, identity: IdentityDocument }> {
+    //     try {
+    //         const { email, password } = loginDto;
 
-            const identity = await this.identityModel.findOne({ email }).select('+passwordHash').exec();
+    //         const identity = await this.identityModel.findOne({ email }).select('+passwordHash').exec();
 
-            if (!identity || identity.status !== IdentityStatus.ACTIVE) {
-                throw new UnauthorizedException('Invalid login credentials or your security profile is locked.');
-            }
+    //         if (!identity || identity.status !== IdentityStatus.ACTIVE) {
+    //             throw new UnauthorizedException('Invalid login credentials or your security profile is locked.');
+    //         }
 
-            const isPasswordMatching = await bcrypt.compare(password, identity.passwordHash);
-            if (!isPasswordMatching) {
-                throw new UnauthorizedException('Invalid login credentials provided.');
-            }
+    //         const isPasswordMatching = await bcrypt.compare(password, identity.passwordHash);
+    //         if (!isPasswordMatching) {
+    //             throw new UnauthorizedException('Invalid login credentials provided.');
+    //         }
 
-            const tokenPayload = { sub: identity._id, email: identity.email, roles: identity.roles, status: identity.status };
-            const accessToken = await this.jwtService.signAsync(tokenPayload);
+    //         const tokenPayload = { sub: identity._id, email: identity.email, roles: identity.roles, status: identity.status };
+    //         const accessToken = await this.jwtService.signAsync(tokenPayload);
 
-            return { accessToken, identity };
+    //         return { accessToken, identity };
 
-        } catch (error) {
-            console.error(`Message: ${(error as Error).message}`);
-            throw error;
-        }
-    }
+    //     } catch (error) {
+    //         console.error(`Message: ${(error as Error).message}`);
+    //         throw error;
+    //     }
+    // }
 
-    async updateStatus(identityId: string, status: IdentityStatus): Promise<IdentityDocument> {
-        const identity = await this.identityModel.findByIdAndUpdate(identityId, { status }, { returnDocument: 'after' });
-        if (!identity) {
-            throw new NotFoundException('Identity not found');
-        }
-        return identity;
-    }
+    // async updateStatus(identityId: string, status: IdentityStatus): Promise<IdentityDocument> {
+    //     const identity = await this.identityModel.findByIdAndUpdate(identityId, { status }, { returnDocument: 'after' });
+    //     if (!identity) {
+    //         throw new NotFoundException('Identity not found');
+    //     }
+    //     return identity;
+    // }
 }
