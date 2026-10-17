@@ -10,20 +10,17 @@ export class Identity {
     @Prop({ required: true, unique: true, lowercase: true, trim: true, index: true })
     email!: string;
 
-    @Prop({ required: true, select: false })
-    passwordHash!: string;
-
     @Prop({ required: true, trim: true })
     phone!: string;
 
-    @Prop({ required: true, type: [String], enum: Role, index: true })
-    roles!: Role[];
+    @Prop({ required: true, select: false })
+    passwordHash!: string;
 
-    @Prop({ required: true, enum: IdentityStatus, default: IdentityStatus.PENDING })
+    @Prop({ required: true, type: String, enum: IdentityStatus, default: IdentityStatus.PENDING })
     status!: IdentityStatus;
 
-    @Prop()
-    lastLoginAt?: Date;
+    @Prop({ required: true, type: String, enum: Role, index: true })
+    role!: Role;
 }
 
 export const IdentitySchema = SchemaFactory.createForClass(Identity);

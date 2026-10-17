@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty } from 'class-validator';
-import { FleetStatus } from 'src/shared/enums/fleet-status.enum';
+import { FleetStatus } from 'src/shared/enums/duty-status.enum';
 
 export class UpdateDriverStatusDto {
     @IsEnum(FleetStatus, {

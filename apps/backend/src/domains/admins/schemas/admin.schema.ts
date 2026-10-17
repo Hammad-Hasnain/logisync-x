@@ -10,7 +10,13 @@ export class Admin {
 
     @Prop({ required: true, trim: true })
     name!: string;
-
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);
+
+AdminSchema.set('toJSON', {
+    transform: (_, ret) => {
+        const { _id, __v, ...rest } = ret;
+        return { id: _id?.toString(), ...rest };
+    },
+});

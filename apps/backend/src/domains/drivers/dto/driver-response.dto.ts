@@ -1,4 +1,4 @@
-import { FleetStatus } from 'src/shared/enums/fleet-status.enum';
+import { FleetStatus } from 'src/shared/enums/duty-status.enum';
 import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
 
 export class DriverResponseDto {

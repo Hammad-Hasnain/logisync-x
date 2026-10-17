@@ -8,7 +8,7 @@ import { AssignDriverDto } from '../drivers/dto/assign-driver.dto';
 import { OrderStatus } from 'src/shared/enums/order-status.enum';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { DriversService } from '../drivers/drivers.service';
-import { FleetStatus } from 'src/shared/enums/fleet-status.enum';
+import { FleetStatus } from 'src/shared/enums/duty-status.enum';
 
 @Injectable()
 export class OrdersService {

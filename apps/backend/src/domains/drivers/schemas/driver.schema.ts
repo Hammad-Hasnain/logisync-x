@@ -1,12 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import { FleetStatus } from 'src/shared/enums/fleet-status.enum';
+import { DutyStatus } from 'src/shared/enums/duty-status.enum';
 
 export type DriverDocument = HydratedDocument<Driver>;
 
 @Schema({ timestamps: true })
 export class Driver {
-    // THE AUTH BINDING LINK: Reference pointing straight back to the identities collection _id
     @Prop({ type: Types.ObjectId, required: true, ref: 'Identity', unique: true })
     identityId!: Types.ObjectId;
 
@@ -14,23 +13,19 @@ export class Driver {
     name!: string;
 
     @Prop({ required: true, trim: true })
-    licenseNumber!: string;
-
-    @Prop({ required: true, trim: true })
     vehicleNumber!: string;
 
     @Prop({
         type: String,
-        enum: Object.values(FleetStatus),
-        default: FleetStatus.OFFLINE
+        enum: DutyStatus,
+        default: DutyStatus.AVAILABLE
     })
-    fleetStatus!: FleetStatus;
+    dutyStatus!: DutyStatus;
 }
 
 export const DriverSchema = SchemaFactory.createForClass(Driver);
 
 
-// Mongoose transformation
 DriverSchema.set('toJSON', {
     transform: (_, ret) => {
         const { _id, __v, ...rest } = ret;
