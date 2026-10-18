@@ -12,6 +12,7 @@ import { DriverResponseDto } from './dto/driver-response.dto';
 import { IdentityDocument } from '../identity/schemas/identity.schema';
 import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { DutyStatus } from 'src/shared/enums/duty-status.enum';
 
 @Injectable()
 export class DriversService {
@@ -173,6 +174,56 @@ export class DriversService {
 
     //     return updatedDriver;
     // }
+
+    async createDriver(createDriverDto: CreateDriverDto): Promise<DriverDocument> {
+        const { name, email, password, phone, vehicleNumber, status } = createDriverDto;
+
+        // LATER: Duplicate vehicle number check before starting transaction to avoid unnecessary session locks
+        // const existingVehicle = await this.driverModel.findOne({
+        //     vehicleNumber: vehicleNumber.toUpperCase().trim()
+        // });
+        // if (existingVehicle) {
+        //     throw new ConflictException('Fleet operational asset deployment vehicle registration plate already allocated.');
+        // }
+
+        const session = await this.connection.startSession();
+        let driverDocument!: DriverDocument;
+
+        try {
+            await session.withTransaction(async () => {
+                // 1. Create centralized core login identity via identityService
+                const identity = await this.identityService.createIdentity(
+                    {
+                        email,
+                        password,
+                        phone,
+                        role: Role.DRIVER,
+                        ...(status && { status })
+                    },
+                    session,
+                );
+
+                // 2. Expand profile details inside the drivers collection
+                const [createdDriver] = await this.driverModel.create(
+                    [
+                        {
+                            identityId: identity._id,
+                            name,
+                            vehicleNumber: vehicleNumber.toUpperCase().trim(),
+                            dutyStatus: DutyStatus.AVAILABLE, // Initial default state layout
+                        },
+                    ],
+                    { session },
+                );
+
+                driverDocument = createdDriver;
+            });
+        } finally {
+            await session.endSession();
+        }
+
+        return driverDocument;
+    }
 
     async getProfileByIdentity(identityId: Types.ObjectId | string): Promise<DriverDocument> {
         const driver = await this.driverModel.findOne({ identityId });

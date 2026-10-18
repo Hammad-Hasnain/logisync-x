@@ -12,6 +12,11 @@ import { UpdateDriverDto } from './dto/update-driver.dto';
 export class DriversController {
     constructor(private readonly driversService: DriversService) { }
 
+    @Post()
+    async createDriver(@Body() createDriverDto: CreateDriverDto): Promise<DriverDocument> {
+        return this.driversService.createDriver(createDriverDto);
+    }
+
     // @Post('signup')
     // async signUp(@Body() createDriverDto: CreateDriverDto): Promise<DriverDocument> {
     //     return this.driversService.create(createDriverDto);
