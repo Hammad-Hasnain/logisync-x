@@ -24,29 +24,9 @@ export class OrdersController {
         return this.ordersService.findAllOrders();
     }
 
-    // @Patch(':id/assign-driver')
-    // // @UseGuards(AuthGuard('jwt'), RolesGuard)
-    // // @Roles(Role.ADMIN)
-    // async assignDriver(
-    //     @Param('id') id: string,
-    //     @Body() assignDriverDto: AssignDriverDto,
-    // ): Promise<OrderDocument> {
-    //     return this.ordersService.assignDriver(id, assignDriverDto);
-    // }
+    @Get(':id')
+    async findOrderById(@Param('id') id: string): Promise<IOrderResponse> {
+        return this.ordersService.findOrderById(id);
+    }
 
-    // @Get()
-    // async getAllOrders(): Promise<OrderDocument[]> {
-    //     return this.ordersService.findAll();
-    // }
-
-    // @Get(':id')
-    // async findById(@Param('id') id: string) {
-    //     return this.ordersService.findById(id);
-    // }
-
-    // @Patch(':id')
-    // @UseGuards(AuthGuard('jwt'))
-    // async update(@Param('id') id: string, @Body() dto: UpdateOrderDto) {
-    //     return this.ordersService.update(id, dto);
-    // }
 }

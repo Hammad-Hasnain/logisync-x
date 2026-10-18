@@ -77,4 +77,61 @@ export class OrdersService {
             }
         ]).exec();
     }
+
+    async findOrderById(id: string): Promise<IOrderResponse> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid order ID format.');
+        }
+
+        const [order] = await this.orderModel.aggregate<IOrderResponse>([
+            {
+                $match: {
+                    _id: new Types.ObjectId(id)
+                }
+            },
+            {
+                $lookup: {
+                    from: 'drivers',
+                    localField: 'assignedDriverId',
+                    foreignField: '_id',
+                    as: 'driverDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$driverDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    id: { $toString: '$_id' },
+                    customerName: 1,
+                    assignedDriverId: {
+                        $cond: {
+                            if: { $ifNull: ['$driverDetails._id', false] },
+                            then: { $toString: '$driverDetails._id' },
+                            else: null
+                        }
+                    },
+                    driverName: { $ifNull: ['$driverDetails.name', null] },
+                    driverVehicleNumber: { $ifNull: ['$driverDetails.vehicleNumber', null] },
+                    deliveryAddress: 1,
+                    pickupLocation: 1,
+                    status: 1,
+                    trackingId: 1,
+                    createdAt: 1,
+                    updatedAt: 1
+                }
+            }
+        ]).exec();
+
+        if (!order) {
+            throw new NotFoundException('Order not found.');
+        }
+
+        return order;
+    }
+
 }
