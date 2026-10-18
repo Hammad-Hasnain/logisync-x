@@ -29,4 +29,11 @@ export class OrdersController {
         return this.ordersService.findOrderById(id);
     }
 
+    @Patch(':id')
+    async updateOrder(
+        @Param('id') id: string,
+        @Body() updateOrderDto: UpdateOrderDto
+    ): Promise<IOrderResponse> {
+        return this.ordersService.updateOrder(id, updateOrderDto);
+    }
 }

@@ -1,30 +1,15 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateOrderDto {
-    @IsString() @IsNotEmpty() @IsOptional()
-    senderName?: string;
+    @IsOptional()
+    @IsString({ message: 'Customer verification name must contain plain standard characters.' })
+    customerName?: string;
 
-    @IsString() @IsNotEmpty() @IsOptional()
-    senderPhone?: string;
+    @IsOptional()
+    @IsString({ message: 'Logistics fulfillment delivery destination address parameter must be text.' })
+    deliveryAddress?: string;
 
-    @IsString() @IsNotEmpty() @IsOptional()
-    receiverName?: string;
-
-    @IsString() @IsNotEmpty() @IsOptional()
-    receiverPhone?: string;
-
-    @IsString() @IsNotEmpty() @IsOptional()
-    originAddress?: string;
-
-    @IsString() @IsNotEmpty() @IsOptional()
-    destinationAddress?: string;
-
-    @IsString() @IsNotEmpty() @IsOptional()
-    parcelDescription?: string;
-
-    @IsNumber() @Min(0) @IsOptional()
-    weightKg?: number;
-
-    @IsNumber() @Min(0) @IsOptional()
-    billingAmount?: number;
+    @IsOptional()
+    @IsString({ message: 'Logistics cargo pickup dispatch station marker parameters must be text.' })
+    pickupLocation?: string;
 }

@@ -133,5 +133,34 @@ export class OrdersService {
 
         return order;
     }
+    async updateOrder(id: string, updateOrderDto: UpdateOrderDto): Promise<IOrderResponse> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid order ID format.');
+        }
 
+        const { customerName, deliveryAddress, pickupLocation } = updateOrderDto;
+
+        const orderDoc = await this.orderModel.findById(id);
+        if (!orderDoc) {
+            throw new NotFoundException('Order not found.');
+        }
+
+        const orderUpdates = {
+            ...(customerName && { customerName }),
+            ...(deliveryAddress && { deliveryAddress }),
+            ...(pickupLocation && { pickupLocation })
+        };
+
+        const hasUpdates = Object.keys(orderUpdates).length > 0;
+
+        if (hasUpdates) {
+            await this.orderModel.updateOne(
+                { _id: orderDoc._id },
+                { $set: orderUpdates }
+            );
+        }
+
+        return this.findOrderById(id);
+    }
 }
+
