@@ -179,5 +179,31 @@ export class OrdersService {
         return { message: 'Order deleted successfully.' };
     }
 
+    async assignDriver(id: string, assignDriverDto: AssignDriverDto): Promise<IOrderResponse> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid order ID format.');
+        }
+
+        const { driverId } = assignDriverDto;
+
+        await this.driversService.findDriverById(driverId);
+
+        const orderDoc = await this.orderModel.findById(id);
+        if (!orderDoc) {
+            throw new NotFoundException('Order not found.');
+        }
+
+        await this.orderModel.updateOne(
+            { _id: orderDoc._id },
+            {
+                $set: {
+                    assignedDriverId: new Types.ObjectId(driverId),
+                    status: OrderStatus.ASSIGNED
+                }
+            }
+        );
+
+        return this.findOrderById(id);
+    }
 }
 

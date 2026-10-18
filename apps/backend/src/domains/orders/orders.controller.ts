@@ -41,4 +41,12 @@ export class OrdersController {
     async deleteOrder(@Param('id') id: string): Promise<{ message: string }> {
         return this.ordersService.deleteOrder(id);
     }
+
+    @Patch(':id/assign-driver')
+    async assignDriver(
+        @Param('id') id: string,
+        @Body() assignDriverDto: AssignDriverDto
+    ): Promise<IOrderResponse> {
+        return this.ordersService.assignDriver(id, assignDriverDto);
+    }
 }
