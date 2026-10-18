@@ -213,4 +213,29 @@ export class DriversService {
         return driver;
     }
 
+    async deleteDriver(id: string): Promise<{ message: string }> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid driver ID format.');
+        }
+
+        const driverDoc = await this.driverModel.findById(id);
+        if (!driverDoc) {
+            throw new NotFoundException('Driver not found.');
+        }
+
+        const session = await this.connection.startSession();
+
+        try {
+            await session.withTransaction(async () => {
+                await this.driverModel.deleteOne({ _id: driverDoc._id }, { session });
+
+                await this.identityService.deleteIdentity(driverDoc.identityId, session);
+            });
+        } finally {
+            await session.endSession();
+        }
+
+        return { message: 'Driver deleted successfully.' };
+    }
+
 }

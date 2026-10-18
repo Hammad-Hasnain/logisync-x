@@ -126,4 +126,12 @@ export class IdentityService {
             { ...(session && { session }) }
         );
     }
+
+    async deleteIdentity(identityId: Types.ObjectId, session?: ClientSession): Promise<void> {
+        await this.identityModel.deleteOne(
+            { _id: identityId },
+            { ...(session && { session }) }
+        );
+    }
+
 }

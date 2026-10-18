@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Param, Get, Patch } from '@nestjs/common';
+import { Body, Controller, Post, Param, Get, Patch, Delete } from '@nestjs/common';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { DriverDocument } from './schemas/driver.schema';
@@ -31,6 +31,12 @@ export class DriversController {
     ): Promise<IDriverResponse> {
         return this.driversService.updateDriver(id, updateDriverDto);
     }
+
+    @Delete(':id')
+    async deleteDriver(@Param('id') id: string): Promise<{ message: string }> {
+        return this.driversService.deleteDriver(id);
+    }
+
 }
 
 
