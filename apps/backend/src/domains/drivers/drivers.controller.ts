@@ -1,8 +1,9 @@
-import { Body, Controller, Post, Param, Get } from '@nestjs/common';
+import { Body, Controller, Post, Param, Get, Patch } from '@nestjs/common';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { DriverDocument } from './schemas/driver.schema';
 import { IDriverResponse } from './interface/driver-response.interface';
+import { UpdateDriverDto } from './dto/update-driver.dto';
 
 @Controller('drivers')
 export class DriversController {
@@ -21,6 +22,14 @@ export class DriversController {
     @Get(':id')
     async findDriverById(@Param('id') id: string): Promise<IDriverResponse> {
         return this.driversService.findDriverById(id);
+    }
+
+    @Patch(':id')
+    async updateDriver(
+        @Param('id') id: string,
+        @Body() updateDriverDto: UpdateDriverDto
+    ): Promise<IDriverResponse> {
+        return this.driversService.updateDriver(id, updateDriverDto);
     }
 }
 

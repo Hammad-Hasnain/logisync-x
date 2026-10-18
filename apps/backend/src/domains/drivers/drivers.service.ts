@@ -8,6 +8,7 @@ import { IdentityService } from '../identity/identity.service';
 import { Role } from 'src/shared/enums/role.enum';
 import { DutyStatus } from 'src/shared/enums/duty-status.enum';
 import { IDriverResponse } from './interface/driver-response.interface';
+import { UpdateDriverDto } from './dto/update-driver.dto';
 
 @Injectable()
 export class DriversService {
@@ -131,7 +132,7 @@ export class DriversService {
             {
                 $project: {
                     _id: 0,
-                    id: { $toString: '_id' },
+                    id: { $toString: '$_id' },
                     name: 1,
                     email: '$identityDetails.email',
                     phone: '$identityDetails.phone',
@@ -150,6 +151,58 @@ export class DriversService {
         }
 
         return driver;
+    }
+
+    async updateDriver(id: string, updateDriverDto: UpdateDriverDto): Promise<IDriverResponse> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid driver ID format.');
+        }
+
+        const { name, phone, vehicleNumber, dutyStatus, status } = updateDriverDto;
+
+        const driverDoc = await this.driverModel.findById(id);
+        if (!driverDoc) {
+            throw new NotFoundException('Driver not found.');
+        }
+
+        const driverUpdates = {
+            ...(name && { name }),
+            ...(vehicleNumber && { vehicleNumber }),
+            ...(dutyStatus && { dutyStatus })
+        };
+
+        const identityUpdates = {
+            ...(phone && { phone }),
+            ...(status && { status })
+        };
+
+        const hasDriverUpdates = Object.keys(driverUpdates).length > 0;
+        const hasIdentityUpdates = Object.keys(identityUpdates).length > 0;
+
+        if (!hasDriverUpdates && !hasIdentityUpdates) {
+            return this.findDriverById(id);
+        }
+
+        if (hasIdentityUpdates && hasDriverUpdates) {
+            const session = await this.connection.startSession();
+            try {
+                await session.withTransaction(async () => {
+                    await this.driverModel.updateOne({ _id: driverDoc._id }, { $set: driverUpdates }, { session });
+                    await this.identityService.updateIdentity(driverDoc.identityId, identityUpdates, session);
+                });
+            } finally {
+                await session.endSession();
+            }
+        }
+        else if (hasIdentityUpdates) {
+            await this.identityService.updateIdentity(driverDoc.identityId, identityUpdates);
+        }
+        else if (hasDriverUpdates) {
+            await this.driverModel.updateOne({ _id: driverDoc._id }, { $set: driverUpdates });
+        }
+
+        return this.findDriverById(id);
+
     }
 
     async getProfileByIdentity(identityId: Types.ObjectId | string): Promise<DriverDocument> {

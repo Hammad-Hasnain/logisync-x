@@ -11,6 +11,8 @@ import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
 import { Role } from 'src/shared/enums/role.enum';
 import { AdminsService } from '../admins/admins.service';
 import { DriversService } from '../drivers/drivers.service';
+import { Types } from 'mongoose';
+import { UpdateIdentityDto } from './dto/update-identity.dto';
 
 @Injectable()
 export class IdentityService {
@@ -111,5 +113,17 @@ export class IdentityService {
         } catch (error) {
             throw new NotFoundException((error as Error).message || 'Profile linkage definitions data corrupted or entry omitted.');
         }
+    }
+
+    async updateIdentity(
+        identityId: Types.ObjectId,
+        updateFields: any,
+        session?: ClientSession
+    ): Promise<void> {
+        await this.identityModel.updateOne(
+            { _id: identityId },
+            { $set: updateFields },
+            { ...(session && { session }) }
+        );
     }
 }
