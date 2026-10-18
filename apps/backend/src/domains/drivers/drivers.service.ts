@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Connection, Types } from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
@@ -100,6 +100,56 @@ export class DriversService {
                 }
             }
         ]).exec();
+    }
+
+    async findDriverById(id: string): Promise<IDriverResponse> {
+
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid driver ID format.');
+        }
+
+        const [driver] = await this.driverModel.aggregate<IDriverResponse>([
+            {
+                $match: {
+                    _id: new Types.ObjectId(id)
+                }
+            },
+            {
+                $lookup: {
+                    from: 'identities',
+                    localField: 'identityId',
+                    foreignField: '_id',
+                    as: 'identityDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$identityDetails',
+                    preserveNullAndEmptyArrays: false
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    id: { $toString: '_id' },
+                    name: 1,
+                    email: '$identityDetails.email',
+                    phone: '$identityDetails.phone',
+                    status: '$identityDetails.status',
+                    role: '$identityDetails.role',
+                    vehicleNumber: 1,
+                    dutyStatus: 1,
+                    createdAt: 1,
+                    updatedAt: 1
+                }
+            }
+        ]).exec();
+
+        if (!driver) {
+            throw new NotFoundException(`Driver not found.`);
+        }
+
+        return driver;
     }
 
     async getProfileByIdentity(identityId: Types.ObjectId | string): Promise<DriverDocument> {

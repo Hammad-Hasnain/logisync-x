@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Patch, Param, UseGuards, Get } from '@nestjs/common';
+import { Body, Controller, Post, Param, Get } from '@nestjs/common';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { DriverDocument } from './schemas/driver.schema';
@@ -16,6 +16,11 @@ export class DriversController {
     @Get()
     async findAllDrivers(): Promise<IDriverResponse[]> {
         return this.driversService.findAllDrivers();
+    }
+
+    @Get(':id')
+    async findDriverById(@Param('id') id: string): Promise<IDriverResponse> {
+        return this.driversService.findDriverById(id);
     }
 }
 
