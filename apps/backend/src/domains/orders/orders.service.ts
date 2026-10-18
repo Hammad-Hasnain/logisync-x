@@ -10,6 +10,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { DriversService } from '../drivers/drivers.service';
 import { generateTrackingId } from 'src/shared/utils/generate-tracking-id.util';
 import { IOrderResponse } from './interfaces/order-response.interface';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @Injectable()
 export class OrdersService {
@@ -201,6 +202,40 @@ export class OrdersService {
                     status: OrderStatus.ASSIGNED
                 }
             }
+        );
+
+        return this.findOrderById(id);
+    }
+
+    async updateOrderStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<IOrderResponse> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid order ID format.');
+        }
+
+        const { status: targetStatus } = updateOrderStatusDto;
+
+        const orderDoc = await this.orderModel.findById(id);
+        if (!orderDoc) {
+            throw new NotFoundException('Order not found.');
+        }
+        const currentStatus = orderDoc.status;
+
+
+        if (targetStatus === OrderStatus.PICKED_UP && currentStatus !== OrderStatus.ASSIGNED) {
+            throw new BadRequestException(`Cannot transition to PICKED_UP. Order must be ASSIGNED first.`);
+        }
+
+        if (targetStatus === OrderStatus.IN_TRANSIT && currentStatus !== OrderStatus.PICKED_UP) {
+            throw new BadRequestException(`Cannot transition to IN_TRANSIT. Order must be PICKED_UP first.`);
+        }
+
+        if (targetStatus === OrderStatus.DELIVERED && currentStatus !== OrderStatus.IN_TRANSIT) {
+            throw new BadRequestException(`Cannot transition to DELIVERED. Order must be IN_TRANSIT first.`);
+        }
+
+        await this.orderModel.updateOne(
+            { _id: orderDoc._id },
+            { $set: { status: targetStatus } }
         );
 
         return this.findOrderById(id);

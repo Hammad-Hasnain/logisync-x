@@ -9,6 +9,7 @@ import { Roles } from '../../shared/decorators/roles.decorator';
 import { Role } from '../../shared/enums/role.enum';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { IOrderResponse } from './interfaces/order-response.interface';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -48,5 +49,13 @@ export class OrdersController {
         @Body() assignDriverDto: AssignDriverDto
     ): Promise<IOrderResponse> {
         return this.ordersService.assignDriver(id, assignDriverDto);
+    }
+
+    @Patch(':id/status')
+    async updateOrderStatus(
+        @Param('id') id: string,
+        @Body() updateOrderStatusDto: UpdateOrderStatusDto
+    ): Promise<IOrderResponse> {
+        return this.ordersService.updateOrderStatus(id, updateOrderStatusDto);
     }
 }
