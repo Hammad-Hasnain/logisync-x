@@ -7,6 +7,7 @@ import { LoginDriverDto } from './dto/login-driver.dto';
 import { UpdateIdentityStatusDto } from './dto/update-identity-status.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { IDriverResponse } from './interface/driver-response.interface';
 
 @Controller('drivers')
 export class DriversController {
@@ -15,6 +16,11 @@ export class DriversController {
     @Post()
     async createDriver(@Body() createDriverDto: CreateDriverDto): Promise<DriverDocument> {
         return this.driversService.createDriver(createDriverDto);
+    }
+
+    @Get()
+    async findAllDrivers(): Promise<IDriverResponse[]> {
+        return this.driversService.findAllDrivers();
     }
 
     // @Post('signup')
