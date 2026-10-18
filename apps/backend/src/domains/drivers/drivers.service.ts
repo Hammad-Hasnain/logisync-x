@@ -1,17 +1,11 @@
-import { Injectable, ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Connection, ClientSession, Types } from 'mongoose';
+import { Model, Connection, Types } from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Driver, DriverDocument } from './schemas/driver.schema';
 import { CreateDriverDto } from './dto/create-driver.dto';
-import { UpdateDriverStatusDto } from './dto/update-driver-status.dto';
-import { LoginDriverDto } from './dto/login-driver.dto';
 import { IdentityService } from '../identity/identity.service';
 import { Role } from 'src/shared/enums/role.enum';
-import { DriverResponseDto } from './dto/driver-response.dto';
-import { IdentityDocument } from '../identity/schemas/identity.schema';
-import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
-import { UpdateDriverDto } from './dto/update-driver.dto';
 import { DutyStatus } from 'src/shared/enums/duty-status.enum';
 import { IDriverResponse } from './interface/driver-response.interface';
 
