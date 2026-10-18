@@ -13,10 +13,10 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 export class OrdersController {
     constructor(private readonly ordersService: OrdersService) { }
 
-    // @Post('create')
-    // async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<OrderDocument> {
-    //     return this.ordersService.create(createOrderDto);
-    // }
+    @Post()
+    async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<OrderDocument> {
+        return this.ordersService.createOrder(createOrderDto);
+    }
 
     // @Patch(':id/assign-driver')
     // // @UseGuards(AuthGuard('jwt'), RolesGuard)
