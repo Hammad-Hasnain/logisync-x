@@ -9,6 +9,7 @@ import { Role } from 'src/shared/enums/role.enum';
 import { DutyStatus } from 'src/shared/enums/duty-status.enum';
 import { IDriverResponse } from './interface/driver-response.interface';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { IDriverDropdownResponse } from './interface/driver-dropdown-response.interface';
 
 @Injectable()
 export class DriversService {
@@ -238,4 +239,16 @@ export class DriversService {
         return { message: 'Driver deleted successfully.' };
     }
 
+    async getDriversDropdown(): Promise<IDriverDropdownResponse[]> {
+        return this.driverModel.aggregate<IDriverDropdownResponse>([
+            {
+                $project: {
+                    _id: 0,
+                    id: { $toString: '$_id' },
+                    name: 1,
+                    dutyStatus: 1
+                }
+            }
+        ]).exec();
+    }
 }

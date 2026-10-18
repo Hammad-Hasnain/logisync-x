@@ -4,6 +4,7 @@ import { CreateDriverDto } from './dto/create-driver.dto';
 import { DriverDocument } from './schemas/driver.schema';
 import { IDriverResponse } from './interface/driver-response.interface';
 import { UpdateDriverDto } from './dto/update-driver.dto';
+import { IDriverDropdownResponse } from './interface/driver-dropdown-response.interface';
 
 @Controller('drivers')
 export class DriversController {
@@ -17,6 +18,11 @@ export class DriversController {
     @Get()
     async findAllDrivers(): Promise<IDriverResponse[]> {
         return this.driversService.findAllDrivers();
+    }
+
+    @Get('dropdown')
+    async getDriversDropdown(): Promise<IDriverDropdownResponse[]> {
+        return this.driversService.getDriversDropdown();
     }
 
     @Get(':id')
@@ -36,6 +42,7 @@ export class DriversController {
     async deleteDriver(@Param('id') id: string): Promise<{ message: string }> {
         return this.driversService.deleteDriver(id);
     }
+
 
 }
 
