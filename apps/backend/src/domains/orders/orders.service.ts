@@ -186,6 +186,7 @@ export class OrdersService {
         }
 
         const { driverId } = assignDriverDto;
+        const driverObjId = new Types.ObjectId(driverId);
 
         await this.driversService.findDriverById(driverId);
 
@@ -194,15 +195,30 @@ export class OrdersService {
             throw new NotFoundException('Order not found.');
         }
 
-        await this.orderModel.updateOne(
-            { _id: orderDoc._id },
-            {
-                $set: {
-                    assignedDriverId: new Types.ObjectId(driverId),
-                    status: OrderStatus.ASSIGNED
-                }
-            }
-        );
+        const session = await this.connection.startSession();
+
+        try {
+            await session.withTransaction(async () => {
+                await this.orderModel.updateOne(
+                    { _id: orderDoc._id },
+                    {
+                        $set: {
+                            assignedDriverId: driverObjId,
+                            status: OrderStatus.ASSIGNED
+                        }
+                    },
+                    { session }
+                );
+
+                await this.trackingService.initializeTrackingLog(
+                    orderDoc._id,
+                    driverObjId,
+                    session
+                );
+            });
+        } finally {
+            await session.endSession();
+        }
 
         return this.findOrderById(id);
     }

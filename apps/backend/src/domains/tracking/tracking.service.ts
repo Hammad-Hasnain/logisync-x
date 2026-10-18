@@ -12,54 +12,71 @@ export class TrackingService {
         @InjectModel(TrackingLog.name) private readonly trackingLogModel: Model<TrackingLog>,
     ) { }
 
-    async initializeStream(initializeTrackingDto: InitializeTrackingDto, session?: ClientSession,): Promise<TrackingLog> {
-        const { orderId, driverId } = initializeTrackingDto;
-
-        const existingLog = await this.trackingLogModel.findOne({ orderId: new Types.ObjectId(orderId) }).exec();
-
-        if (existingLog) {
-            throw new ConflictException('A live telemetry tracking session stream already maps to this order configuration.');
-        }
-
-        const [newLog] = await this.trackingLogModel.create(
-            [
-                {
-                    orderId: new Types.ObjectId(orderId),
-                    driverId: new Types.ObjectId(driverId),
-                    coordinates: [],
-                    isActiveStream: true,
-                },
-            ],
-            { session },
+    async initializeTrackingLog(
+        orderId: Types.ObjectId,
+        driverId: Types.ObjectId,
+        session: ClientSession
+    ): Promise<void> {
+        await this.trackingLogModel.updateOne(
+            { orderId },
+            {
+                $set: { driverId },
+                $setOnInsert: { coordinates: [], isActiveStream: false }
+            },
+            { upsert: true, session }
         );
-
-        return newLog;
     }
 
-    async pushLocation(pushCoordinateDto: PushCoordinateDto): Promise<TrackingLog> {
-        const { orderId, latitude, longitude } = pushCoordinateDto;
 
-        const updatedLog = await this.trackingLogModel.findOneAndUpdate(
-            {
-                orderId: new Types.ObjectId(orderId),
-                isActiveStream: true
-            },
-            {
-                $push: {
-                    coordinates: {
-                        latitude,
-                        longitude,
-                        timestamp: new Date()
-                    }
-                }
-            },
-            { returnDocument: 'after' }
-        ).exec();
 
-        if (!updatedLog) {
-            throw new NotFoundException('No active tracking log stream found mapping to this Order reference.');
-        }
+    // async initializeStream(initializeTrackingDto: InitializeTrackingDto, session?: ClientSession,): Promise<TrackingLog> {
+    //     const { orderId, driverId } = initializeTrackingDto;
 
-        return updatedLog;
-    }
+    //     const existingLog = await this.trackingLogModel.findOne({ orderId: new Types.ObjectId(orderId) }).exec();
+
+    //     if (existingLog) {
+    //         throw new ConflictException('A live telemetry tracking session stream already maps to this order configuration.');
+    //     }
+
+    //     const [newLog] = await this.trackingLogModel.create(
+    //         [
+    //             {
+    //                 orderId: new Types.ObjectId(orderId),
+    //                 driverId: new Types.ObjectId(driverId),
+    //                 coordinates: [],
+    //                 isActiveStream: true,
+    //             },
+    //         ],
+    //         { session },
+    //     );
+
+    //     return newLog;
+    // }
+
+    // async pushLocation(pushCoordinateDto: PushCoordinateDto): Promise<TrackingLog> {
+    //     const { orderId, latitude, longitude } = pushCoordinateDto;
+
+    //     const updatedLog = await this.trackingLogModel.findOneAndUpdate(
+    //         {
+    //             orderId: new Types.ObjectId(orderId),
+    //             isActiveStream: true
+    //         },
+    //         {
+    //             $push: {
+    //                 coordinates: {
+    //                     latitude,
+    //                     longitude,
+    //                     timestamp: new Date()
+    //                 }
+    //             }
+    //         },
+    //         { returnDocument: 'after' }
+    //     ).exec();
+
+    //     if (!updatedLog) {
+    //         throw new NotFoundException('No active tracking log stream found mapping to this Order reference.');
+    //     }
+
+    //     return updatedLog;
+    // }
 }
