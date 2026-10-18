@@ -9,6 +9,7 @@ import { OrderStatus } from 'src/shared/enums/order-status.enum';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { DriversService } from '../drivers/drivers.service';
 import { generateTrackingId } from 'src/shared/utils/generate-tracking-id.util';
+import { IOrderResponse } from './interfaces/order-response.interface';
 
 @Injectable()
 export class OrdersService {
@@ -36,5 +37,44 @@ export class OrdersService {
         return newOrder;
     }
 
-    
+    async findAllOrders(): Promise<IOrderResponse[]> {
+        return this.orderModel.aggregate<IOrderResponse>([
+            {
+                $lookup: {
+                    from: 'drivers',
+                    localField: 'assignedDriverId',
+                    foreignField: '_id',
+                    as: 'driverDetails'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$driverDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    id: { $toString: '$_id' },
+                    customerName: 1,
+                    assignedDriverId: {
+                        $cond: {
+                            if: { $ifNull: ['$driverDetails._id', false] },
+                            then: { $toString: '$driverDetails._id' },
+                            else: null
+                        }
+                    },
+                    driverName: { $ifNull: ['$driverDetails.name', null] },
+                    driverVehicleNumber: { $ifNull: ['$driverDetails.vehicleNumber', null] },
+                    deliveryAddress: 1,
+                    pickupLocation: 1,
+                    status: 1,
+                    trackingId: 1,
+                    createdAt: 1,
+                    updatedAt: 1
+                }
+            }
+        ]).exec();
+    }
 }

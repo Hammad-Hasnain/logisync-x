@@ -8,6 +8,7 @@ import { RolesGuard } from '../../shared/guards/roles.guard';
 import { Roles } from '../../shared/decorators/roles.decorator';
 import { Role } from '../../shared/enums/role.enum';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { IOrderResponse } from './interfaces/order-response.interface';
 
 @Controller('orders')
 export class OrdersController {
@@ -16,6 +17,11 @@ export class OrdersController {
     @Post()
     async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<OrderDocument> {
         return this.ordersService.createOrder(createOrderDto);
+    }
+
+    @Get()
+    async findAllOrders(): Promise<IOrderResponse[]> {
+        return this.ordersService.findAllOrders();
     }
 
     // @Patch(':id/assign-driver')
