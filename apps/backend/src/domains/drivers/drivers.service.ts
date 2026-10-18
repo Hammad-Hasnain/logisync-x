@@ -10,6 +10,7 @@ import { DutyStatus } from 'src/shared/enums/duty-status.enum';
 import { IDriverResponse } from './interface/driver-response.interface';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { IDriverDropdownResponse } from './interface/driver-dropdown-response.interface';
+import { IDriverOrderItemResponse } from './interface/driver-orders-response.interface';
 
 @Injectable()
 export class DriversService {
@@ -247,6 +248,36 @@ export class DriversService {
                     id: { $toString: '$_id' },
                     name: 1,
                     dutyStatus: 1
+                }
+            }
+        ]).exec();
+    }
+
+    async getDriverOrders(driverId: string): Promise<IDriverOrderItemResponse[]> {
+        if (!Types.ObjectId.isValid(driverId)) {
+            throw new BadRequestException('Invalid driver ID format.');
+        }
+
+        return this.connection.model('Order').aggregate<IDriverOrderItemResponse>([
+            {
+                $match: {
+                    assignedDriverId: new Types.ObjectId(driverId)
+                }
+            },
+            {
+                $sort: { createdAt: 1 }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    id: { $toString: '$_id' },
+                    customerName: 1,
+                    deliveryAddress: 1,
+                    pickupLocation: 1,
+                    status: 1,
+                    trackingId: 1,
+                    createdAt: 1,
+                    updatedAt: 1
                 }
             }
         ]).exec();
