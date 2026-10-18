@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Admin, AdminDocument } from './schemas/admin.schema';
 import { IdentityService } from '../identity/identity.service';
@@ -10,7 +10,7 @@ import { Role } from 'src/shared/enums/role.enum';
 export class AdminsService {
     constructor(
         @InjectModel(Admin.name) private readonly adminModel: Model<Admin>,
-        private readonly identityService: IdentityService,
+        @Inject(forwardRef(() => IdentityService)) private readonly identityService: IdentityService,
         @InjectConnection() private readonly connection: Connection,
     ) { }
 
@@ -52,5 +52,12 @@ export class AdminsService {
         return adminDocument;
     }
 
+    async getProfileByIdentity(identityId: Types.ObjectId | string): Promise<AdminDocument> {
+        const admin = await this.adminModel.findOne({ identityId });
+        if (!admin) {
+            throw new Error('Admin profile configuration record not found.');
+        }
+        return admin;
+    }
 }
 

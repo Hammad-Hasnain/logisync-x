@@ -1,16 +1,24 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, ForbiddenException, UnauthorizedException, NotFoundException, Inject, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ClientSession, Error } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Identity, IdentityDocument } from './schemas/identity.schema';
 import { CreateIdentityDto } from './dto/create-identity.dto';
+import { LoginDto } from './dto/login.dto';
+import { LoginResponse, UnifiedUserProfile } from './interfaces/login-response.interface';
+import { IdentityStatus } from 'src/shared/enums/identity-status.enum';
+import { Role } from 'src/shared/enums/role.enum';
+import { AdminsService } from '../admins/admins.service';
+import { DriversService } from '../drivers/drivers.service';
 
 @Injectable()
 export class IdentityService {
     constructor(
         @InjectModel(Identity.name) private readonly identityModel: Model<IdentityDocument>,
         private readonly jwtService: JwtService,
+        @Inject(forwardRef(() => AdminsService)) private readonly adminService: AdminsService,
+        @Inject(forwardRef(() => DriversService)) private readonly driverService: DriversService,
     ) { }
 
     async createIdentity(
@@ -46,37 +54,62 @@ export class IdentityService {
         return identity;
     }
 
-    // async login(loginDto: LoginDriverDto): Promise<{ accessToken: string, identity: IdentityDocument }> {
-    //     try {
-    //         const { email, password } = loginDto;
+    async validateAndLogin(loginDto: LoginDto): Promise<LoginResponse> {
+        const { email, password } = loginDto;
 
-    //         const identity = await this.identityModel.findOne({ email }).select('+passwordHash').exec();
+        // Fetch Identity & Validate
+        const identity = await this.identityModel.findOne({ email }).select('+passwordHash');
+        if (!identity) {
+            throw new UnauthorizedException('Invalid operational credentials provided.');
+        }
 
-    //         if (!identity || identity.status !== IdentityStatus.ACTIVE) {
-    //             throw new UnauthorizedException('Invalid login credentials or your security profile is locked.');
-    //         }
+        // Status Check using Switch
+        switch (identity.status) {
+            case IdentityStatus.DEACTIVE:
+                throw new ForbiddenException('This profile configuration has been deactivated by system administrative operations.');
+            case IdentityStatus.PENDING:
+                throw new ForbiddenException('This profile is under review. Please contact admin if not yet approved.');
+        }
 
-    //         const isPasswordMatching = await bcrypt.compare(password, identity.passwordHash);
-    //         if (!isPasswordMatching) {
-    //             throw new UnauthorizedException('Invalid login credentials provided.');
-    //         }
+        // Password Verification
+        const isPasswordMatch = await bcrypt.compare(password, identity.passwordHash);
+        if (!isPasswordMatch) {
+            throw new UnauthorizedException('Invalid operational credentials provided.');
+        }
 
-    //         const tokenPayload = { sub: identity._id, email: identity.email, roles: identity.roles, status: identity.status };
-    //         const accessToken = await this.jwtService.signAsync(tokenPayload);
+        // Generate JWT
+        const payload = { sub: identity._id.toString(), email: identity.email, role: identity.role };
+        const accessToken = await this.jwtService.signAsync(payload);
 
-    //         return { accessToken, identity };
+        try {
+            // Dynamic Profile Fetching based on Role
+            let profileService: any;
+            if (identity.role === Role.ADMIN) profileService = this.adminService;
+            else profileService = this.driverService;
 
-    //     } catch (error) {
-    //         console.error(`Message: ${(error as Error).message}`);
-    //         throw error;
-    //     }
-    // }
+            const profile = await profileService.getProfileByIdentity(identity._id);
+            if (!profile) {
+                throw new NotFoundException('Profile not found.');
+            }
 
-    // async updateStatus(identityId: string, status: IdentityStatus): Promise<IdentityDocument> {
-    //     const identity = await this.identityModel.findByIdAndUpdate(identityId, { status }, { returnDocument: 'after' });
-    //     if (!identity) {
-    //         throw new NotFoundException('Identity not found');
-    //     }
-    //     return identity;
-    // }
+            const identityObj = identity.toObject();
+            const { _id, __v, ...profileObj } = profile.toObject();
+
+            const userProfile: UnifiedUserProfile = {
+                email: identityObj.email,
+                phone: identityObj.phone,
+                status: identityObj.status,
+                role: identityObj.role,
+
+                // Profile fields
+                ...profileObj,
+                id: _id.toString(),
+            };
+
+            return { accessToken, user: userProfile };
+
+        } catch (error) {
+            throw new NotFoundException((error as Error).message || 'Profile linkage definitions data corrupted or entry omitted.');
+        }
+    }
 }

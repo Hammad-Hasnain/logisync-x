@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Connection, ClientSession } from 'mongoose';
+import { Model, Connection, ClientSession, Types } from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Driver, DriverDocument } from './schemas/driver.schema';
 import { CreateDriverDto } from './dto/create-driver.dto';
@@ -173,5 +173,13 @@ export class DriversService {
 
     //     return updatedDriver;
     // }
+
+    async getProfileByIdentity(identityId: Types.ObjectId | string): Promise<DriverDocument> {
+        const driver = await this.driverModel.findOne({ identityId });
+        if (!driver) {
+            throw new Error('Driver profile configuration record not found.');
+        }
+        return driver;
+    }
 
 }
