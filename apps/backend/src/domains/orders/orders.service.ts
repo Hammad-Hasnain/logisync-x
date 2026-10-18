@@ -133,6 +133,7 @@ export class OrdersService {
 
         return order;
     }
+
     async updateOrder(id: string, updateOrderDto: UpdateOrderDto): Promise<IOrderResponse> {
         if (!Types.ObjectId.isValid(id)) {
             throw new BadRequestException('Invalid order ID format.');
@@ -162,5 +163,21 @@ export class OrdersService {
 
         return this.findOrderById(id);
     }
+
+    async deleteOrder(id: string): Promise<{ message: string }> {
+        if (!Types.ObjectId.isValid(id)) {
+            throw new BadRequestException('Invalid order ID format.');
+        }
+
+        const orderDoc = await this.orderModel.findById(id);
+        if (!orderDoc) {
+            throw new NotFoundException('Order not found.');
+        }
+
+        await this.orderModel.deleteOne({ _id: orderDoc._id });
+
+        return { message: 'Order deleted successfully.' };
+    }
+
 }
 

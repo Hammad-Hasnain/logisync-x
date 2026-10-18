@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderDocument } from './schemas/order.schema';
@@ -35,5 +35,10 @@ export class OrdersController {
         @Body() updateOrderDto: UpdateOrderDto
     ): Promise<IOrderResponse> {
         return this.ordersService.updateOrder(id, updateOrderDto);
+    }
+
+    @Delete(':id')
+    async deleteOrder(@Param('id') id: string): Promise<{ message: string }> {
+        return this.ordersService.deleteOrder(id);
     }
 }
