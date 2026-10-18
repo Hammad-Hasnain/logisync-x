@@ -254,6 +254,12 @@ export class OrdersService {
             { $set: { status: targetStatus } }
         );
 
+        if (targetStatus === OrderStatus.IN_TRANSIT) {
+            await this.trackingService.toggleStreamActivity(orderDoc._id, true);
+        } else if (targetStatus === OrderStatus.DELIVERED) {
+            await this.trackingService.toggleStreamActivity(orderDoc._id, false);
+        }
+
         return this.findOrderById(id);
     }
 }

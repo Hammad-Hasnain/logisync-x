@@ -1,10 +1,11 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { TrackingLog } from './schemas/tracking.schema';
 import { Model, Mongoose, Types } from 'mongoose';
 import { InitializeTrackingDto } from './dto/initialize-tracking.dto';
 import { PushCoordinateDto } from './dto/push-coordinate.dto';
 import { ClientSession } from 'mongoose';
+import { BatchSyncTelemetryDto } from './dto/batch-sync-telemetry.dto';
 
 @Injectable()
 export class TrackingService {
@@ -27,56 +28,51 @@ export class TrackingService {
         );
     }
 
+    async toggleStreamActivity(orderId: Types.ObjectId, isActiveStream: boolean): Promise<void> {
+        await this.trackingLogModel.updateOne(
+            { orderId },
+            { $set: { isActiveStream } }
+        );
+    }
 
+    async processTelemetryBatchSync(batchSyncTelemetryDto: BatchSyncTelemetryDto): Promise<{ message: string; pointsSynced: number }> {
+        const { orderId, coordinates } = batchSyncTelemetryDto;
 
-    // async initializeStream(initializeTrackingDto: InitializeTrackingDto, session?: ClientSession,): Promise<TrackingLog> {
-    //     const { orderId, driverId } = initializeTrackingDto;
+        const targetOrderId = new Types.ObjectId(orderId);
 
-    //     const existingLog = await this.trackingLogModel.findOne({ orderId: new Types.ObjectId(orderId) }).exec();
+        const logDoc = await this.trackingLogModel.findOne({ orderId: targetOrderId });
+        if (!logDoc) {
+            throw new NotFoundException('Telemetry tracking tracking path anchor ledger record not found.');
+        }
 
-    //     if (existingLog) {
-    //         throw new ConflictException('A live telemetry tracking session stream already maps to this order configuration.');
-    //     }
+        if (!logDoc.isActiveStream) {
+            throw new BadRequestException('Synchronizing payloads denied. The specified telemetry channel trace sequence stream is closed.');
+        }
 
-    //     const [newLog] = await this.trackingLogModel.create(
-    //         [
-    //             {
-    //                 orderId: new Types.ObjectId(orderId),
-    //                 driverId: new Types.ObjectId(driverId),
-    //                 coordinates: [],
-    //                 isActiveStream: true,
-    //             },
-    //         ],
-    //         { session },
-    //     );
+        if (coordinates.length === 0) {
+            return { message: 'Zero buffer parameters telemetry data frames updated.', pointsSynced: 0 };
+        }
 
-    //     return newLog;
-    // }
+        const localizedCoordinatesMapped = coordinates.map(point => ({
+            lat: point.lat,
+            lng: point.lng,
+            timestamp: new Date(point.timestamp)
+        }));
 
-    // async pushLocation(pushCoordinateDto: PushCoordinateDto): Promise<TrackingLog> {
-    //     const { orderId, latitude, longitude } = pushCoordinateDto;
+        await this.trackingLogModel.updateOne(
+            { orderId: targetOrderId },
+            {
+                $push: {
+                    coordinates: {
+                        $each: localizedCoordinatesMapped
+                    }
+                }
+            }
+        );
 
-    //     const updatedLog = await this.trackingLogModel.findOneAndUpdate(
-    //         {
-    //             orderId: new Types.ObjectId(orderId),
-    //             isActiveStream: true
-    //         },
-    //         {
-    //             $push: {
-    //                 coordinates: {
-    //                     latitude,
-    //                     longitude,
-    //                     timestamp: new Date()
-    //                 }
-    //             }
-    //         },
-    //         { returnDocument: 'after' }
-    //     ).exec();
-
-    //     if (!updatedLog) {
-    //         throw new NotFoundException('No active tracking log stream found mapping to this Order reference.');
-    //     }
-
-    //     return updatedLog;
-    // }
+        return {
+            message: 'Localized offline mobile buffering metrics synced safely to cloud storage architectures.',
+            pointsSynced: coordinates.length
+        };
+    }
 }
