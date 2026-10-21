@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AdminsModule } from './domains/admins/admins.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RedisModule } from './infrastructure/redis/redis.module';
       inject: [ConfigService],
     }),
 
+    ScheduleModule.forRoot(),
     RedisModule,
     AdminsModule,
     DriversModule,

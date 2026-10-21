@@ -6,6 +6,7 @@ import { ClientSession } from 'mongoose';
 import { BatchSyncTelemetryDto } from './dto/batch-sync-telemetry.dto';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from 'src/infrastructure/redis/redis.constants';
+import { Cron, CronExpression } from '@nestjs/schedule'
 
 @Injectable()
 export class TrackingService {
@@ -19,6 +20,52 @@ export class TrackingService {
      */
     private getCacheKey(orderId: string | Types.ObjectId): string {
         return `tracking:log:${orderId.toString()}`;
+    }
+
+    @Cron(CronExpression.EVERY_30_MINUTES)
+    async handleSafetyBackgroundTelemetryArchival(): Promise<void> {
+        console.log('⏰ [LogiSync-X Safety Cron] Initiating time-series data storage syncing sequence...');
+
+        // 1. Scan and retrieve database path matrices for active route streams only
+        const activeRouteStreams = await this.trackingLogModel.find({ isActiveStream: true }).lean();
+
+        if (activeRouteStreams.length === 0) return;
+
+        for (const logDoc of activeRouteStreams) {
+            const orderIdStr = logDoc.orderId.toString();
+            const cacheKey = this.getCacheKey(logDoc.orderId);
+
+            // Fetch current active temporary sets accumulated inside memory grids
+            const cachedPointsRaw = await this.redisClient.lrange(cacheKey, 0, -1);
+
+            if (cachedPointsRaw.length > 0) {
+                const parsedCoordinatesMapped = cachedPointsRaw.map(pointStr => {
+                    const parsed = JSON.parse(pointStr);
+                    return {
+                        lat: parsed.lat,
+                        lng: parsed.lng,
+                        timestamp: new Date(parsed.timestamp)
+                    };
+                });
+
+                // Stream offloading into MongoDB safely inside localized atomic batch updates
+                await this.trackingLogModel.updateOne(
+                    { orderId: logDoc.orderId },
+                    {
+                        $push: {
+                            coordinates: {
+                                $each: parsedCoordinatesMapped
+                            }
+                        }
+                    }
+                );
+
+                // Trim Redis cache list memory queue to prevent tracking data duplications over the next interval checks
+                // We use LTRIM to keep elements that might have arrived during the processing transaction loop execution
+                await this.redisClient.ltrim(cacheKey, cachedPointsRaw.length, -1);
+                console.log(`💾 [Cron Auto-Sync Success] Archived ${cachedPointsRaw.length} chunks safely for Order: ${orderIdStr}`);
+            }
+        }
     }
 
     async initializeTrackingLog(
