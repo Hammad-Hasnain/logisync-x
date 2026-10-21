@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TrackingLog, TrackingLogSchema } from './schemas/tracking.schema';
 import { JwtStrategy } from '../drivers/strategies/jwt.strategy';
 import { DriversModule } from '../drivers/drivers.module';
+import { TrackingGateway } from './tracking.gateway';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { DriversModule } from '../drivers/drivers.module';
     DriversModule
   ],
   controllers: [TrackingController],
-  providers: [TrackingService, JwtStrategy],
+  providers: [TrackingService, JwtStrategy, TrackingGateway],
   exports: [TrackingService],
 })
 export class TrackingModule { }

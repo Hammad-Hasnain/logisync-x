@@ -7,6 +7,7 @@ import { TrackingModule } from './domains/tracking/tracking.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AdminsModule } from './domains/admins/admins.module';
+import { RedisModule } from './infrastructure/redis/redis.module';
 
 @Module({
   imports: [
@@ -23,10 +24,11 @@ import { AdminsModule } from './domains/admins/admins.module';
       inject: [ConfigService],
     }),
 
+    RedisModule,
     AdminsModule,
     DriversModule,
     OrdersModule,
-    TrackingModule
+    TrackingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
