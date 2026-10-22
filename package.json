@@ -15,7 +15,8 @@
     }
   },
   "workspaces": [
-    "apps/*"
+    "apps/backend",
+    "apps/web-admin"
   ],
   "devDependencies": {
     "turbo": "^2.10.11"
