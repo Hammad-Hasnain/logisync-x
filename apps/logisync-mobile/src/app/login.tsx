@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import { Redirect, useRouter } from 'expo-router';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Locked to your verified local development network node
 const TARGET_IP = '192.168.100.27';
@@ -33,6 +34,10 @@ export default function LoginScreen() {
             // console.log(response.data.accessToken)
             if ((response.status === 200 || response.status === 201) && response.data.accessToken) {
                 await SecureStore.setItemAsync('driver_auth_token', response.data.accessToken);
+
+                // 2. Serialize and save the user block object (Acts exactly like your browser's localStorage)
+                const userProfileString = JSON.stringify(response.data.user);
+                await AsyncStorage.setItem('driver_profile', userProfileString);
 
                 // Alert.alert('Success', 'Authentication validated!', [
                 //     {
