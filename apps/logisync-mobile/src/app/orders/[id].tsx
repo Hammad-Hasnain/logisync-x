@@ -125,11 +125,25 @@ export default function OrderDetailScreen() {
                     </View>
                 );
 
+            case 'CANCELLED':
+                return (
+                    <View style={[styles.completedNotice, styles.noticeRed]}>
+                        <Text style={[styles.completedText, styles.textRed]}>Order Cancelled</Text>
+                    </View>
+                );
+
+            // ✅ Explicitly handles the Delivered state footprint
+            case 'DELIVERED':
+                return (
+                    <View style={[styles.completedNotice, styles.noticeGreen]}>
+                        <Text style={[styles.completedText, styles.textGreen]}>Order Delivered</Text>
+                    </View>
+                );
+
             default:
-                // This catches DELIVERED, CANCELLED, or any accidental admin ASSIGNED states
                 return (
                     <View style={styles.completedNotice}>
-                        <Text style={styles.completedText}>Order Completed</Text>
+                        <Text style={styles.completedText}>Status Completed</Text>
                     </View>
                 );
         }
@@ -248,13 +262,10 @@ const styles = StyleSheet.create({
     completedNotice: { padding: 12, backgroundColor: '#f1f5f9', borderRadius: 8, alignItems: 'center' },
     completedText: { color: '#94a3b8', fontWeight: '700', fontSize: 13 },
     backBtn: { padding: 12, backgroundColor: '#0f172a', borderRadius: 8 },
-    backBtnText: { color: '#FFFFFF', fontWeight: '700' }
+    backBtnText: { color: '#FFFFFF', fontWeight: '700' },
+    noticeRed: { backgroundColor: '#fee2e2', borderColor: '#fca5a5', borderWidth: 1 },
+    textRed: { color: '#ef4444' },
+    noticeGreen: { backgroundColor: '#dcfce7', borderColor: '#bbf7d0', borderWidth: 1 },
+    textGreen: { color: '#22c55e' },
+
 });
-
-// import { Text, View } from "react-native";
-
-// export default function OrderDetailScreen() {
-//     return <View>
-//         <Text> Order Detail Page</Text>
-//     </View>
-// }
