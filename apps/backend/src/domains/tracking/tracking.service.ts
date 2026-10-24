@@ -76,7 +76,7 @@ export class TrackingService {
 
                     if (this.redisClient.status !== 'ready') {
                         console.error(`🚨 [Critical Risk] MongoDB updated but Redis disconnected before LTRIM for Order: ${orderIdStr}. Data duplication might occur next cycle.`);
-                        return; 
+                        return;
                     }
 
                     // Trim Redis cache list memory queue to prevent tracking data duplications over the next interval checks
@@ -111,8 +111,16 @@ export class TrackingService {
             { $set: { isActiveStream } }
         );
 
+        console.log(`[LogiSync-X Stream Log] Stream status flipped to ${isActiveStream} for Order: ${orderId.toString()}`);
+
         // Core USP Protocol: If stream turns off (DELIVERED/CANCELLED), dump cache logs safely
         if (!isActiveStream) {
+
+            if (this.redisClient.status !== 'ready') {
+                console.warn(`⚠️ [LogiSync-X Core Alert] Redis Client is NOT ready or disconnected. Bypassing cache log dump to prevent process crash for Order: ${orderId.toString()}`);
+                return; // Exit safely; system gracefully degrades instead of throwing a runtime error
+            }
+
             const cacheKey = this.getCacheKey(orderId);
             const cachedPointsRaw = await this.redisClient.lrange(cacheKey, 0, -1);
 
