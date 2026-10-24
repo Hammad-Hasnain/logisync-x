@@ -108,7 +108,19 @@ export default function HomeScreen() {
 
   // Card UI Rendering for active delivery items
   const renderOrderCard = ({ item }: { item: Order }) => (
-    <View style={styles.card}>
+    <TouchableOpacity
+      style={styles.card}
+      // onPress={() => router.push(`/orders/${item.id}`)} // 👈 Dynamically passes order id
+      onPress={() => {
+        console.log(item.id)
+        return router.push({
+          pathname: '/orders/[id]',
+          params: { id: item.id }
+        })
+      }}
+
+      activeOpacity={0.7}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.trackingId}>{item.trackingId}</Text>
         <View style={[styles.statusBadge, item.status === 'IN_TRANSIT' ? styles.statusTransit : styles.statusDone]}>
@@ -123,7 +135,7 @@ export default function HomeScreen() {
         <Text style={styles.infoLabel}>Delivery Destination</Text>
         <Text style={styles.infoValue}>{item.deliveryAddress}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   // Render loading indicator while evaluating initial validation tokens
