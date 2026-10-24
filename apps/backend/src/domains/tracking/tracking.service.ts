@@ -17,7 +17,7 @@ export class TrackingService {
     ) { }
 
     /**
-     * Senior Engineer Utility: Unified Key Generator to eliminate hardcoded string risks
+     * Unified Key Generator to eliminate hardcoded string risks
      */
     private getCacheKey(orderId: string | Types.ObjectId): string {
         return `tracking:log:${orderId.toString()}`;
@@ -26,57 +26,67 @@ export class TrackingService {
     @Cron(CronExpression.EVERY_30_MINUTES)
     async handleSafetyBackgroundTelemetryArchival(): Promise<void> {
         console.log('⏰ [LogiSync-X Safety Cron] Initiating time-series data storage syncing sequence...');
-        console.log(this.redisClient.status);
 
         if (this.redisClient.status !== 'ready') {
             console.warn('⚠️ [Cron Skipped] Redis is disconnected or not ready. Status:', this.redisClient.status);
             return;
         }
 
-        // 1. Scan and retrieve database path matrices for active route streams only
-        const activeRouteStreams = await this.trackingLogModel.find({ isActiveStream: true }).lean();
+        try {
 
-        if (activeRouteStreams.length === 0) return;
 
-        for (const logDoc of activeRouteStreams) {
-            const orderIdStr = logDoc.orderId.toString();
-            const cacheKey = this.getCacheKey(logDoc.orderId);
+            // 1. Scan and retrieve database path matrices for active route streams only
+            const activeRouteStreams = await this.trackingLogModel.find({ isActiveStream: true }).lean();
 
-            if (this.redisClient.status !== 'ready') {
-                console.warn('⚠️ [Cron Aborted Mid-loop] Redis connection lost during processing.');
-                return;
-            }
+            if (activeRouteStreams.length === 0) return;
 
-            // Fetch current active temporary sets accumulated inside memory grids
-            const cachedPointsRaw = await this.redisClient.lrange(cacheKey, 0, -1);
+            for (const logDoc of activeRouteStreams) {
+                const orderIdStr = logDoc.orderId.toString();
+                const cacheKey = this.getCacheKey(logDoc.orderId);
 
-            if (cachedPointsRaw.length > 0) {
-                const parsedCoordinatesMapped = cachedPointsRaw.map(pointStr => {
-                    const parsed = JSON.parse(pointStr);
-                    return {
-                        lat: parsed.lat,
-                        lng: parsed.lng,
-                        timestamp: new Date(parsed.timestamp)
-                    };
-                });
+                if (this.redisClient.status !== 'ready') {
+                    console.warn('⚠️ [Cron Aborted Mid-loop] Redis connection lost during processing.');
+                    return;
+                }
 
-                // Stream offloading into MongoDB safely inside localized atomic batch updates
-                await this.trackingLogModel.updateOne(
-                    { orderId: logDoc.orderId },
-                    {
-                        $push: {
-                            coordinates: {
-                                $each: parsedCoordinatesMapped
+                // Fetch current active temporary sets accumulated inside memory grids
+                const cachedPointsRaw = await this.redisClient.lrange(cacheKey, 0, -1);
+
+                if (cachedPointsRaw.length > 0) {
+                    const parsedCoordinatesMapped = cachedPointsRaw.map(pointStr => {
+                        const parsed = JSON.parse(pointStr);
+                        return {
+                            lat: parsed.lat,
+                            lng: parsed.lng,
+                            timestamp: new Date(parsed.timestamp)
+                        };
+                    });
+
+                    // Stream offloading into MongoDB safely inside localized atomic batch updates
+                    await this.trackingLogModel.updateOne(
+                        { orderId: logDoc.orderId },
+                        {
+                            $push: {
+                                coordinates: {
+                                    $each: parsedCoordinatesMapped
+                                }
                             }
                         }
-                    }
-                );
+                    );
 
-                // Trim Redis cache list memory queue to prevent tracking data duplications over the next interval checks
-                // We use LTRIM to keep elements that might have arrived during the processing transaction loop execution
-                await this.redisClient.ltrim(cacheKey, cachedPointsRaw.length, -1);
-                console.log(`💾 [Cron Auto-Sync Success] Archived ${cachedPointsRaw.length} chunks safely for Order: ${orderIdStr}`);
+                    if (this.redisClient.status !== 'ready') {
+                        console.error(`🚨 [Critical Risk] MongoDB updated but Redis disconnected before LTRIM for Order: ${orderIdStr}. Data duplication might occur next cycle.`);
+                        return; 
+                    }
+
+                    // Trim Redis cache list memory queue to prevent tracking data duplications over the next interval checks
+                    // We use LTRIM to keep elements that might have arrived during the processing transaction loop execution
+                    await this.redisClient.ltrim(cacheKey, cachedPointsRaw.length, -1);
+                    console.log(`💾 [Cron Auto-Sync Success] Archived ${cachedPointsRaw.length} chunks safely for Order: ${orderIdStr}`);
+                }
             }
+        } catch (error: any) {
+            console.error('❌ [Cron Error] Failed to execute background archival sequence:', error.message);
         }
     }
 
