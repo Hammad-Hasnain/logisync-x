@@ -7,6 +7,7 @@ import { BatchSyncTelemetryDto } from './dto/batch-sync-telemetry.dto';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from 'src/infrastructure/redis/redis.constants';
 import { Cron, CronExpression } from '@nestjs/schedule'
+import { log } from 'node:console';
 
 @Injectable()
 export class TrackingService {
@@ -25,6 +26,12 @@ export class TrackingService {
     @Cron(CronExpression.EVERY_30_MINUTES)
     async handleSafetyBackgroundTelemetryArchival(): Promise<void> {
         console.log('⏰ [LogiSync-X Safety Cron] Initiating time-series data storage syncing sequence...');
+        console.log(this.redisClient.status);
+
+        if (this.redisClient.status !== 'ready') {
+            console.warn('⚠️ [Cron Skipped] Redis is disconnected or not ready. Status:', this.redisClient.status);
+            return;
+        }
 
         // 1. Scan and retrieve database path matrices for active route streams only
         const activeRouteStreams = await this.trackingLogModel.find({ isActiveStream: true }).lean();
@@ -34,6 +41,11 @@ export class TrackingService {
         for (const logDoc of activeRouteStreams) {
             const orderIdStr = logDoc.orderId.toString();
             const cacheKey = this.getCacheKey(logDoc.orderId);
+
+            if (this.redisClient.status !== 'ready') {
+                console.warn('⚠️ [Cron Aborted Mid-loop] Redis connection lost during processing.');
+                return;
+            }
 
             // Fetch current active temporary sets accumulated inside memory grids
             const cachedPointsRaw = await this.redisClient.lrange(cacheKey, 0, -1);
