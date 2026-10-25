@@ -115,7 +115,7 @@ export default function OrderDetailScreen() {
     }, [order?.status, orderId]);
 
     // --- 5-Second Location Loop & Telemetry / AsyncStorage Handler ---
-    const startTrackingLoop = (targetOrderId: string, socketInstanceRef: React.MutableRefObject<Socket | null>) => {
+    const startTrackingLoop = (targetOrderId: string, socketInstanceRef: React.RefObject<Socket | null>) => {
         stopTrackingLoop(); // Clear any existing interval
 
         intervalRef.current = setInterval(async () => {
