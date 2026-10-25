@@ -34,6 +34,7 @@ export class TrackingGateway {
         @ConnectedSocket() client: Socket
     ) {
         try {
+            console.log('📡 LIVE TELEME TRY RECEIVED:', payload);
             const { orderId, lat, lng, timestamp } = payload;
 
             if (!orderId || lat === undefined || lng === undefined || !timestamp) {

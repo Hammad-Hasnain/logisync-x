@@ -256,7 +256,7 @@ export class OrdersService {
 
         if (targetStatus === OrderStatus.IN_TRANSIT) {
             await this.trackingService.toggleStreamActivity(orderDoc._id, true);
-        } else if (targetStatus === OrderStatus.DELIVERED) {
+        } else if (targetStatus === OrderStatus.DELIVERED || targetStatus === OrderStatus.CANCELLED) {
             await this.trackingService.toggleStreamActivity(orderDoc._id, false);
         }
 

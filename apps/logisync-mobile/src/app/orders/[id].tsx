@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 
-
+// --- Imports for Location Tracking & Offline Sync ---
+import * as Location from 'expo-location';
+import NetInfo from '@react-native-community/netinfo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { io, Socket } from 'socket.io-client';
 
 const TARGET_IP = '192.168.100.27';
 const BASE_URL = Platform.OS === 'android' ? `http://${TARGET_IP}:3000` : `http://${TARGET_IP}:3000`;
+const STORAGE_PREFIX = 'offline_coords_';
 
 interface OrderDetail {
     id: string;
@@ -23,6 +28,7 @@ interface OrderDetail {
 
 export default function OrderDetailScreen() {
     const { id } = useLocalSearchParams(); // Extract dynamic order ID parameter
+    const orderId = Array.isArray(id) ? id[0] : id;
     const router = useRouter();
 
     const [order, setOrder] = useState<OrderDetail | null>(null);
@@ -30,13 +36,17 @@ export default function OrderDetailScreen() {
     const [updating, setUpdating] = useState<boolean>(false);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+    // --- Tracking & Socket Refs ---
+    const socketRef = useRef<Socket | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
     // Fetch primary order detail records
     const fetchOrderDetail = async () => {
         setLoading(true);
         setErrorMsg(null);
         try {
             const token = await SecureStore.getItemAsync('driver_auth_token');
-            const endpoint = `${BASE_URL}/api/v1/orders/${id}`;
+            const endpoint = `${BASE_URL}/api/v1/orders/${orderId}`;
             const response = await axios.get(endpoint, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -52,23 +62,168 @@ export default function OrderDetailScreen() {
     };
 
     useEffect(() => {
-        if (id) fetchOrderDetail();
-    }, [id]);
+        if (orderId) fetchOrderDetail();
+    }, [orderId]);
+
+    // --- WebSocket & Location Tracking Lifecycle Effect ---
+    useEffect(() => {
+        if (!orderId) return;
+
+        // Initialize Socket connection in 'tracking' namespace
+        socketRef.current = io(`${BASE_URL}/tracking`, {
+            transports: ['websocket'],
+            autoConnect: false,
+        });
+
+        socketRef.current.connect();
+
+        socketRef.current.on('connect', () => {
+            console.log('🟢 Socket connected to /tracking namespace!');
+        });
+
+        socketRef.current.on('joined', (data) => {
+            console.log('✅ Joined room:', data);
+        });
+
+        socketRef.current.on('error', (err) => {
+            console.error('❌ Socket error:', err);
+        });
+
+        socketRef.current.emit('joinOrderStream', { orderId });
+
+        // NetInfo listener for offline/online sync recovery
+        const unsubscribeNetInfo = NetInfo.addEventListener(async (state) => {
+            if (state.isConnected && orderId) {
+                await syncOfflineCoordinates(orderId);
+            }
+        });
+
+        // Start or Stop tracking based on order status
+        if (order?.status === 'IN_TRANSIT') {
+            startTrackingLoop(orderId, socketRef);
+        } else {
+            stopTrackingLoop();
+        }
+
+        return () => {
+            stopTrackingLoop();
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+            }
+            unsubscribeNetInfo();
+        };
+    }, [order?.status, orderId]);
+
+    // --- 5-Second Location Loop & Telemetry / AsyncStorage Handler ---
+    const startTrackingLoop = (targetOrderId: string, socketInstanceRef: React.MutableRefObject<Socket | null>) => {
+        stopTrackingLoop(); // Clear any existing interval
+
+        intervalRef.current = setInterval(async () => {
+            try {
+                // Fetch current fine location coordinates
+                const location = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.High,
+                });
+
+                const { latitude: lat, longitude: lng } = location.coords;
+                const timestamp = new Date().toISOString();
+
+                const netState = await NetInfo.fetch();
+
+                if (netState.isConnected) {
+                    // Online: Push directly via WebSocket
+                    if (socketInstanceRef.current && socketInstanceRef.current.connected) {
+                        socketInstanceRef.current.emit('pushLiveTelemetry', {
+                            orderId: targetOrderId,
+                            lat,
+                            lng,
+                            timestamp,
+                        });
+                    } else {
+                        // Fallback if socket dropped
+                        await saveToAsyncStorage(targetOrderId, { lat, lng, timestamp });
+                    }
+                } else {
+                    // Offline: Save to AsyncStorage queue
+                    await saveToAsyncStorage(targetOrderId, { lat, lng, timestamp });
+                }
+            } catch (error) {
+                console.error('Error fetching location telemetry:', error);
+            }
+        }, 5000);
+    };
+
+    const stopTrackingLoop = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    };
+
+    // Helper: Save offline coordinate to AsyncStorage
+    const saveToAsyncStorage = async (targetOrderId: string, coord: { lat: number; lng: number; timestamp: string }) => {
+        try {
+            const key = `${STORAGE_PREFIX}${targetOrderId}`;
+            const existingData = await AsyncStorage.getItem(key);
+            const coordsList = existingData ? JSON.parse(existingData) : [];
+
+            coordsList.push(coord);
+            await AsyncStorage.setItem(key, JSON.stringify(coordsList));
+            console.log('💾 [OFFLINE] Coordinate saved to AsyncStorage queue. Total queued:', coordsList.length);
+        } catch (err) {
+            console.error('Failed to save offline coordinate', err);
+        }
+    };
+
+    // Helper: Sync offline coordinates when internet recovers
+    const syncOfflineCoordinates = async (targetOrderId: string) => {
+        try {
+            const key = `${STORAGE_PREFIX}${targetOrderId}`;
+            const existingData = await AsyncStorage.getItem(key);
+            if (!existingData) return;
+
+            const coordinates = JSON.parse(existingData);
+            if (coordinates.length === 0) return;
+
+            if (!Array.isArray(coordinates) || coordinates.length === 0) {
+                return;
+            }
+
+            console.log('🔄 [SYNC] Internet recovered! Attempting to batch sync queued coordinates:', coordinates.length);
+
+            const token = await SecureStore.getItemAsync('driver_auth_token');
+
+            console.log(token);
+            console.log(coordinates);
+
+            // Hit your batch-sync backend endpoint
+            const response = await axios.post(`${BASE_URL}/api/v1/tracking/batch-sync`, {
+                orderId: targetOrderId,
+                coordinates
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (response.status === 200 || response.status === 201) {
+                await AsyncStorage.removeItem(key);
+                console.log('✅ [SYNC] Offline coordinates batch-synced successfully and cleared from storage!');
+            }
+        } catch (err) {
+            console.error('Batch sync failed:', err);
+        }
+    };
 
     // Handle structural backend status updates
     const handleUpdateStatus = async (nextStatus: string) => {
         setUpdating(true);
         try {
             const token = await SecureStore.getItemAsync('driver_auth_token');
-            const endpoint = `${BASE_URL}/api/v1/orders/${id}/status`;
+            const endpoint = `${BASE_URL}/api/v1/orders/${orderId}/status`;
 
             const response = await axios.patch(endpoint, { status: nextStatus }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            console.log(response.data);
-
-            // Endpoint replies back with the updated object fields
             if (response.status === 200 || response.status === 201) {
                 setOrder(response.data);
                 Alert.alert('Status Updated', `Manifest updated to ${nextStatus.replace('_', ' ')}.`);
@@ -81,7 +236,7 @@ export default function OrderDetailScreen() {
         }
     };
 
-    // Conditional render function tailored exactly to your driver workflow constraints
+    // Conditional render function tailored to driver workflow
     const renderActionButtons = () => {
         if (!order || updating) return null;
 
@@ -132,7 +287,6 @@ export default function OrderDetailScreen() {
                     </View>
                 );
 
-            // ✅ Explicitly handles the Delivered state footprint
             case 'DELIVERED':
                 return (
                     <View style={[styles.completedNotice, styles.noticeGreen]}>
@@ -148,7 +302,6 @@ export default function OrderDetailScreen() {
                 );
         }
     };
-
 
     if (loading) {
         return (
@@ -185,11 +338,9 @@ export default function OrderDetailScreen() {
                 >
                     <Text style={styles.refreshButtonText}>REFRESH</Text>
                 </TouchableOpacity>
-
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
-                {/* Status Dashboard Component Banner */}
                 <View style={styles.statusSection}>
                     <Text style={styles.trackIdLabel}>{order.trackingId}</Text>
                     <View style={styles.badgeWrapper}>
@@ -197,7 +348,6 @@ export default function OrderDetailScreen() {
                     </View>
                 </View>
 
-                {/* Main Data Elements Layer */}
                 <View style={styles.detailsCard}>
                     <Text style={styles.sectionHeader}>Logistics Information</Text>
 
@@ -215,7 +365,6 @@ export default function OrderDetailScreen() {
                 </View>
             </ScrollView>
 
-            {/* Bottom Actions Frame */}
             <View style={styles.footerActions}>
                 {updating && <ActivityIndicator size="small" color="#3b82f6" style={{ marginBottom: 10 }} />}
                 {renderActionButtons()}
@@ -230,7 +379,6 @@ const styles = StyleSheet.create({
     loadingText: { marginTop: 12, color: '#64748b', fontWeight: '600' },
     errorText: { color: '#ef4444', fontWeight: '700', textAlign: 'center', marginBottom: 16 },
 
-    // Navbar components
     navbar: { height: 56, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderColor: '#e2e8f0' },
     navBack: { paddingVertical: 6 },
     navBackText: { color: '#3b82f6', fontWeight: '700', fontSize: 15 },
@@ -238,8 +386,6 @@ const styles = StyleSheet.create({
     refreshButton: { backgroundColor: '#0f172a', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minWidth: 60, alignItems: 'center' },
     refreshButtonText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
 
-
-    // Body layout elements
     scrollBody: { padding: 20 },
     statusSection: { alignItems: 'center', backgroundColor: '#FFFFFF', padding: 20, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 20 },
     trackIdLabel: { fontSize: 18, fontWeight: '800', color: '#1e3a8a', marginBottom: 8 },
@@ -251,12 +397,11 @@ const styles = StyleSheet.create({
     fieldLabel: { fontSize: 10, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 },
     fieldValue: { fontSize: 14, fontWeight: '500', color: '#334155', marginBottom: 16 },
 
-    // Status Action Button Arrays
     footerActions: { backgroundColor: '#FFFFFF', padding: 20, borderTopWidth: 1, borderColor: '#e2e8f0' },
     btn: { padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
     btnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700', letterSpacing: 0.5 },
-    btnOrange: { backgroundColor: '#f97316' }, // High-contrast orange for pickup action
-    btnGreen: { backgroundColor: '#22c55e' },  // Professional success green for delivery
+    btnOrange: { backgroundColor: '#f97316' },
+    btnGreen: { backgroundColor: '#22c55e' },
     btnRed: { backgroundColor: '#ef4444' },
     splitBtnRow: { flexDirection: 'row', gap: 12 },
     completedNotice: { padding: 12, backgroundColor: '#f1f5f9', borderRadius: 8, alignItems: 'center' },
@@ -267,5 +412,4 @@ const styles = StyleSheet.create({
     textRed: { color: '#ef4444' },
     noticeGreen: { backgroundColor: '#dcfce7', borderColor: '#bbf7d0', borderWidth: 1 },
     textGreen: { color: '#22c55e' },
-
 });

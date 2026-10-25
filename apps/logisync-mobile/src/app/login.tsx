@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Redirect, useRouter } from 'expo-router';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 
 // Locked to your verified local development network node
 const TARGET_IP = '192.168.100.27';
@@ -38,6 +39,19 @@ export default function LoginScreen() {
                 // 2. Serialize and save the user block object (Acts exactly like your browser's localStorage)
                 const userProfileString = JSON.stringify(response.data.user);
                 await AsyncStorage.setItem('driver_profile', userProfileString);
+
+                // --- Request Location Permissions Right After Successful Login ---
+                try {
+                    const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
+                    if (fgStatus === 'granted') {
+                        await Location.requestBackgroundPermissionsAsync();
+                    } else {
+                        Alert.alert('Permission Required', 'Location permission is required for dispatch tracking.');
+                    }
+                } catch (locErr) {
+                    console.error('Failed to request location permissions:', locErr);
+                }
+                // -----------------------------------------------------------------
 
                 // Alert.alert('Success', 'Authentication validated!', [
                 //     {
