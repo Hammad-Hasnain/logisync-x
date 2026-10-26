@@ -11,7 +11,7 @@ const redisProvider: Provider = {
             password: process.env.REDIS_PASSWORD || undefined,
             retryStrategy: (times) => {
                 if (times > 3) {
-                    console.error('❌ Redis server nahi mil raha. Kya aapne start kiya hai?');
+                    console.error('❌ Redis server not found. Have you started?');
                     return null;
                 }
                 return Math.min(times * 50, 2000);

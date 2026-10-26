@@ -45,8 +45,8 @@ export default function LoginScreen() {
                     const { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
                     console.log('[foreground location]: ', fgStatus)
                     if (fgStatus === 'granted') {
-                        console.log('[foreground location]: ', await Location.requestBackgroundPermissionsAsync())
-                        // await Location.requestBackgroundPermissionsAsync();
+                        const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+                        console.log('[background location]: ', bgStatus)
                     } else {
                         Alert.alert('Permission Required', 'Location permission is required for dispatch tracking.');
                     }

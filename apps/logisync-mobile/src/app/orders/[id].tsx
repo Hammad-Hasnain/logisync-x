@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator, TouchableOpacity, Alert, ScrollView, Platform, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -7,13 +7,14 @@ import axios from 'axios';
 
 // --- Imports for Location Tracking & Offline Sync ---
 import * as Location from 'expo-location';
-import NetInfo from '@react-native-community/netinfo';
+// import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { io, Socket } from 'socket.io-client';
+import { BACKGROUND_TRACKING_TASK } from '@/services/backgroundTask';
 
 const TARGET_IP = '192.168.100.27';
 const BASE_URL = Platform.OS === 'android' ? `http://${TARGET_IP}:3000` : `http://${TARGET_IP}:3000`;
-const STORAGE_PREFIX = 'offline_coords_';
+// const STORAGE_PREFIX = 'offline_coords_';
 
 interface OrderDetail {
     id: string;
@@ -38,7 +39,7 @@ export default function OrderDetailScreen() {
 
     // --- Tracking & Socket Refs ---
     const socketRef = useRef<Socket | null>(null);
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    // const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Fetch primary order detail records
     const fetchOrderDetail = async () => {
@@ -69,6 +70,32 @@ export default function OrderDetailScreen() {
     useEffect(() => {
         if (!orderId) return;
 
+        // 1. Fire up / Stop the native background runner engine based on Order Status
+        const manageBackgroundEngine = async () => {
+            if (order?.status === 'IN_TRANSIT') {
+                await AsyncStorage.setItem('active_tracking_order_id', orderId);
+                const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_TRACKING_TASK);
+                if (!hasStarted) {
+                    await Location.startLocationUpdatesAsync(BACKGROUND_TRACKING_TASK, {
+                        accuracy: Location.Accuracy.High,
+                        timeInterval: 5000,
+                        distanceInterval: 5,
+                        foregroundService: {
+                            notificationTitle: "Tracking Delivery",
+                            notificationBody: "Your dispatch route is being monitored.",
+                        },
+                    });
+                }
+            } else {
+                const hasStarted = await Location.hasStartedLocationUpdatesAsync(BACKGROUND_TRACKING_TASK);
+                if (hasStarted) {
+                    await Location.stopLocationUpdatesAsync(BACKGROUND_TRACKING_TASK);
+                    await AsyncStorage.removeItem('active_tracking_order_id');
+                }
+            }
+        };
+        manageBackgroundEngine();
+
         // Initialize Socket connection in 'tracking' namespace
         socketRef.current = io(`${BASE_URL}/tracking`, {
             transports: ['websocket'],
@@ -91,127 +118,141 @@ export default function OrderDetailScreen() {
 
         socketRef.current.emit('joinOrderStream', { orderId });
 
-        // NetInfo listener for offline/online sync recovery
-        const unsubscribeNetInfo = NetInfo.addEventListener(async (state) => {
-            if (state.isConnected && orderId) {
-                await syncOfflineCoordinates(orderId);
+        // LISTEN TO THE BACKGROUND ENGINE: Catch coordinates when the app is active!
+        const locationSubscription = DeviceEventEmitter.addListener('localForegroundLocationUpdate', (payload) => {
+            if (socketRef.current && socketRef.current.connected) {
+                // Push via WebSockets for sub-second delivery to customers looking at live maps
+                socketRef.current.emit('pushLiveTelemetry', payload);
+                console.log('⚡ [FOREGROUND VIA SOCKET] Live stream update transmitted.');
             }
         });
 
-        // Start or Stop tracking based on order status
-        if (order?.status === 'IN_TRANSIT') {
-            startTrackingLoop(orderId, socketRef);
-        } else {
-            stopTrackingLoop();
-        }
-
         return () => {
-            stopTrackingLoop();
-            if (socketRef.current) {
-                socketRef.current.disconnect();
-            }
-            unsubscribeNetInfo();
+            if (socketRef.current) socketRef.current.disconnect();
+            locationSubscription.remove();
         };
+
+        // // NetInfo listener for offline/online sync recovery
+        // const unsubscribeNetInfo = NetInfo.addEventListener(async (state) => {
+        //     if (state.isConnected && orderId) {
+        //         await syncOfflineCoordinates(orderId);
+        //     }
+        // });
+
+        // // Start or Stop tracking based on order status
+        // if (order?.status === 'IN_TRANSIT') {
+        //     startTrackingLoop(orderId, socketRef);
+        // } else {
+        //     stopTrackingLoop();
+        // }
+
+        // return () => {
+        //     stopTrackingLoop();
+        //     if (socketRef.current) {
+        //         socketRef.current.disconnect();
+        //     }
+        //     unsubscribeNetInfo();
+        // };
     }, [order?.status, orderId]);
 
     // --- 5-Second Location Loop & Telemetry / AsyncStorage Handler ---
-    const startTrackingLoop = (targetOrderId: string, socketInstanceRef: React.RefObject<Socket | null>) => {
-        stopTrackingLoop(); // Clear any existing interval
+    // const startTrackingLoop = (targetOrderId: string, socketInstanceRef: React.RefObject<Socket | null>) => {
+    //     stopTrackingLoop(); // Clear any existing interval
 
-        intervalRef.current = setInterval(async () => {
-            try {
-                // Fetch current fine location coordinates
-                const location = await Location.getCurrentPositionAsync({
-                    accuracy: Location.Accuracy.High,
-                });
+    //     intervalRef.current = setInterval(async () => {
+    //         try {
+    //             // Fetch current fine location coordinates
+    //             const location = await Location.getCurrentPositionAsync({
+    //                 accuracy: Location.Accuracy.High,
+    //             });
 
-                const { latitude: lat, longitude: lng } = location.coords;
-                const timestamp = new Date().toISOString();
+    //             const { latitude: lat, longitude: lng } = location.coords;
+    //             const timestamp = new Date().toISOString();
 
-                const netState = await NetInfo.fetch();
+    //             const netState = await NetInfo.fetch();
 
-                if (netState.isConnected) {
-                    // Online: Push directly via WebSocket
-                    if (socketInstanceRef.current && socketInstanceRef.current.connected) {
-                        socketInstanceRef.current.emit('pushLiveTelemetry', {
-                            orderId: targetOrderId,
-                            lat,
-                            lng,
-                            timestamp,
-                        });
-                    } else {
-                        // Fallback if socket dropped
-                        await saveToAsyncStorage(targetOrderId, { lat, lng, timestamp });
-                    }
-                } else {
-                    // Offline: Save to AsyncStorage queue
-                    await saveToAsyncStorage(targetOrderId, { lat, lng, timestamp });
-                }
-            } catch (error) {
-                console.error('Error fetching location telemetry:', error);
-            }
-        }, 5000);
-    };
+    //             if (netState.isConnected) {
+    //                 // Online: Push directly via WebSocket
+    //                 if (socketInstanceRef.current && socketInstanceRef.current.connected) {
+    //                     socketInstanceRef.current.emit('pushLiveTelemetry', {
+    //                         orderId: targetOrderId,
+    //                         lat,
+    //                         lng,
+    //                         timestamp,
+    //                     });
+    //                 } else {
+    //                     // Fallback if socket dropped
+    //                     await saveToAsyncStorage(targetOrderId, { lat, lng, timestamp });
+    //                 }
+    //             } else {
+    //                 // Offline: Save to AsyncStorage queue
+    //                 await saveToAsyncStorage(targetOrderId, { lat, lng, timestamp });
+    //             }
+    //         } catch (error) {
+    //             console.error('Error fetching location telemetry:', error);
+    //         }
+    //     }, 5000);
+    // };
 
-    const stopTrackingLoop = () => {
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-    };
+    // const stopTrackingLoop = () => {
+    //     if (intervalRef.current) {
+    //         clearInterval(intervalRef.current);
+    //         intervalRef.current = null;
+    //     }
+    // };
 
-    // Helper: Save offline coordinate to AsyncStorage
-    const saveToAsyncStorage = async (targetOrderId: string, coord: { lat: number; lng: number; timestamp: string }) => {
-        try {
-            const key = `${STORAGE_PREFIX}${targetOrderId}`;
-            const existingData = await AsyncStorage.getItem(key);
-            const coordsList = existingData ? JSON.parse(existingData) : [];
+    // // Helper: Save offline coordinate to AsyncStorage
+    // const saveToAsyncStorage = async (targetOrderId: string, coord: { lat: number; lng: number; timestamp: string }) => {
+    //     try {
+    //         const key = `${STORAGE_PREFIX}${targetOrderId}`;
+    //         const existingData = await AsyncStorage.getItem(key);
+    //         const coordsList = existingData ? JSON.parse(existingData) : [];
 
-            coordsList.push(coord);
-            await AsyncStorage.setItem(key, JSON.stringify(coordsList));
-            console.log('💾 [OFFLINE] Coordinate saved to AsyncStorage queue. Total queued:', coordsList.length);
-        } catch (err) {
-            console.error('Failed to save offline coordinate', err);
-        }
-    };
+    //         coordsList.push(coord);
+    //         await AsyncStorage.setItem(key, JSON.stringify(coordsList));
+    //         console.log('💾 [OFFLINE] Coordinate saved to AsyncStorage queue. Total queued:', coordsList.length);
+    //     } catch (err) {
+    //         console.error('Failed to save offline coordinate', err);
+    //     }
+    // };
 
-    // Helper: Sync offline coordinates when internet recovers
-    const syncOfflineCoordinates = async (targetOrderId: string) => {
-        try {
-            const key = `${STORAGE_PREFIX}${targetOrderId}`;
-            const existingData = await AsyncStorage.getItem(key);
-            if (!existingData) return;
+    // // Helper: Sync offline coordinates when internet recovers
+    // const syncOfflineCoordinates = async (targetOrderId: string) => {
+    //     try {
+    //         const key = `${STORAGE_PREFIX}${targetOrderId}`;
+    //         const existingData = await AsyncStorage.getItem(key);
+    //         if (!existingData) return;
 
-            const coordinates = JSON.parse(existingData);
-            if (coordinates.length === 0) return;
+    //         const coordinates = JSON.parse(existingData);
+    //         if (coordinates.length === 0) return;
 
-            if (!Array.isArray(coordinates) || coordinates.length === 0) {
-                return;
-            }
+    //         if (!Array.isArray(coordinates) || coordinates.length === 0) {
+    //             return;
+    //         }
 
-            console.log('🔄 [SYNC] Internet recovered! Attempting to batch sync queued coordinates:', coordinates.length);
+    //         console.log('🔄 [SYNC] Internet recovered! Attempting to batch sync queued coordinates:', coordinates.length);
 
-            const token = await SecureStore.getItemAsync('driver_auth_token');
+    //         const token = await SecureStore.getItemAsync('driver_auth_token');
 
-            console.log(token);
-            console.log(coordinates);
+    //         console.log(token);
+    //         console.log(coordinates);
 
-            // Hit your batch-sync backend endpoint
-            const response = await axios.post(`${BASE_URL}/api/v1/tracking/batch-sync`, {
-                orderId: targetOrderId,
-                coordinates
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+    //         // Hit your batch-sync backend endpoint
+    //         const response = await axios.post(`${BASE_URL}/api/v1/tracking/batch-sync`, {
+    //             orderId: targetOrderId,
+    //             coordinates
+    //         }, {
+    //             headers: { Authorization: `Bearer ${token}` }
+    //         });
 
-            if (response.status === 200 || response.status === 201) {
-                await AsyncStorage.removeItem(key);
-                console.log('✅ [SYNC] Offline coordinates batch-synced successfully and cleared from storage!');
-            }
-        } catch (err) {
-            console.error('Batch sync failed:', err);
-        }
-    };
+    //         if (response.status === 200 || response.status === 201) {
+    //             await AsyncStorage.removeItem(key);
+    //             console.log('✅ [SYNC] Offline coordinates batch-synced successfully and cleared from storage!');
+    //         }
+    //     } catch (err) {
+    //         console.error('Batch sync failed:', err);
+    //     }
+    // };
 
     // Handle structural backend status updates
     const handleUpdateStatus = async (nextStatus: string) => {
