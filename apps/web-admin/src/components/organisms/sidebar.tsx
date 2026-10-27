@@ -10,7 +10,7 @@ import { Card } from '../ui/card';
 
 export function Sidebar() {
     const pathname = usePathname();
-    const { hasAnyRole, admin, logout } = useAuth();
+    const { admin, logout } = useAuth();
 
     return (
         <aside className="w-[280px] p-4">
@@ -21,7 +21,6 @@ export function Sidebar() {
                 {/* Nav items */}
                 <nav className="flex-1 py-4 px-3 space-y-1">
                     {navItems
-                        .filter((item) => hasAnyRole(item.roles))
                         .map((item) => {
                             const isActive = pathname === item.href;
                             return (

@@ -1,7 +1,9 @@
 
 export const API_ENDPOINTS = {
+    identity: {
+        login: '/identity/login',
+    },
     admin: {
-        login: '/admins/login',
         signup: '/admins/signup',
         profile: (id: string) => `/admins/${id}`,
     },

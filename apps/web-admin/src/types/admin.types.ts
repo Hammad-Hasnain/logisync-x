@@ -6,12 +6,14 @@ export interface AdminProfile {
     identityId: string;
     name: string;
     email: string;
-    roles: Role[];
+    role: Role;
     status: IdentityStatus;
     phone: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface AdminLoginResponse {
     accessToken: string;
-    admin: AdminProfile;
+    user: AdminProfile;
 }

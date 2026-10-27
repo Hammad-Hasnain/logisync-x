@@ -20,9 +20,9 @@ export function useAdminLogin() {
 
     return useMutation({
         mutationFn: async (credentials: LoginCredentials) => {
-            const { data } = await apiClient.post<AdminLoginResponse>(API_ENDPOINTS.admin.login, credentials);
+            const { data } = await apiClient.post<AdminLoginResponse>(API_ENDPOINTS.identity.login, credentials);
 
-            if (!data.admin.roles.includes(Role.ADMIN)) {
+            if (data.user.role !== Role.ADMIN) {
                 throw new Error('Access Denied: This account has no admin access.');
             }
 
@@ -35,8 +35,8 @@ export function useAdminLogin() {
         },
 
         onSuccess: (data, _variables, context) => {
-            login(data.accessToken, data.admin);
-            toast.success(`Welcome back, ${data.admin.name}!`, { id: context?.toastId });
+            login(data.accessToken, data.user);
+            toast.success(`Welcome back, ${data.user.name}!`, { id: context?.toastId });
             router.push('/admin/dashboard');
         },
 

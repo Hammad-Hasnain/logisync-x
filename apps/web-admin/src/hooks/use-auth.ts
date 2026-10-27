@@ -1,13 +1,12 @@
 'use client';
 
 import { useAtom, useAtomValue } from 'jotai';
-import { adminAtom, rolesAtom, isAuthenticatedAtom, authLoadingAtom, AdminProfile } from '@/store/auth-atoms';
-import { Role } from '@/enums/role.enum';
+import { adminAtom, isAuthenticatedAtom, authLoadingAtom } from '@/store/auth-atoms';
 import { useRouter } from 'next/navigation';
+import { AdminProfile } from '@/types/admin.types';
 
 export function useAuth() {
     const [admin, setAdmin] = useAtom(adminAtom);
-    const roles = useAtomValue(rolesAtom);
     const isAuthenticated = useAtomValue(isAuthenticatedAtom);
     const [isLoading, setIsLoading] = useAtom(authLoadingAtom);
     const router = useRouter()
@@ -25,8 +24,6 @@ export function useAuth() {
         router.push('/admin/login')
     };
 
-    const hasRole = (role: Role) => roles.includes(role);
-    const hasAnyRole = (checkRoles: Role[]) => checkRoles.some((r) => roles.includes(r));
 
-    return { admin, roles, isAuthenticated, isLoading, setIsLoading, login, logout, hasRole, hasAnyRole };
+    return { admin, isAuthenticated, isLoading, setIsLoading, login, logout };
 }

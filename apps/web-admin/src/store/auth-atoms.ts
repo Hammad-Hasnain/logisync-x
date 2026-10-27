@@ -1,18 +1,9 @@
 import { atom } from 'jotai';
-import { Role } from '@/enums/role.enum';
+import { AdminProfile } from '@/types/admin.types';
 
-export interface AdminProfile {
-    id: string;
-    name: string;
-    email: string;
-    roles: Role[];
-}
 
 // base atom — compelete source of truth
 export const adminAtom = atom<AdminProfile | null>(null);
-
-// derived atom — subscribe if roles required
-export const rolesAtom = atom((get) => get(adminAtom)?.roles ?? []);
 
 // derived atom — to check login-status
 export const isAuthenticatedAtom = atom((get) => get(adminAtom) !== null);
