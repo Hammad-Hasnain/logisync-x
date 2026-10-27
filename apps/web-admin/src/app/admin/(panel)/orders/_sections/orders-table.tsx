@@ -20,18 +20,20 @@ export function OrdersTable() {
     if (isLoading) return <StateMessage variant="loading" message="Loading orders..." />;
     if (!orders?.length) return <StateMessage variant="empty" message="No orders yet." />;
 
-    const driverName = (id: string | null) => drivers?.find((d) => d.id === id)?.name ?? 'Unassigned';
+    const driverName = (orderDriverName: string | null, id: string | null) => {
+        if (orderDriverName) return orderDriverName;
+        return drivers?.find((d) => d.id === id)?.name ?? 'Unassigned';
+    };
 
     return (
         <Table>
             <TableHead>
                 <TableRow>
                     <TableHeaderCell>Tracking ID</TableHeaderCell>
-                    <TableHeaderCell>Sender</TableHeaderCell>
-                    <TableHeaderCell>Receiver</TableHeaderCell>
+                    <TableHeaderCell>Customer Name</TableHeaderCell>
+                    <TableHeaderCell>Destination</TableHeaderCell>
                     <TableHeaderCell>Status</TableHeaderCell>
                     <TableHeaderCell>Driver</TableHeaderCell>
-                    <TableHeaderCell>Amount</TableHeaderCell>
                     <TableHeaderCell className="text-right">Actions</TableHeaderCell>
                 </TableRow>
             </TableHead>
@@ -39,13 +41,12 @@ export function OrdersTable() {
                 {orders.map((order) => (
                     <TableRow key={order.id}>
                         <TableCell className="font-medium">{order.trackingId}</TableCell>
-                        <TableCell>{order.senderName}</TableCell>
-                        <TableCell>{order.receiverName}</TableCell>
+                        <TableCell>{order.customerName}</TableCell>
+                        <TableCell>{order.deliveryAddress}</TableCell>
                         <TableCell>
                             <Badge variant={ORDER_STATUS_BADGE_VARIANT[order.status]}>{order.status}</Badge>
                         </TableCell>
-                        <TableCell>{driverName(order.assignedDriverId)}</TableCell>
-                        <TableCell>Rs. {order.billingAmount.toLocaleString()}</TableCell>
+                        <TableCell>{driverName(order.driverName, order.assignedDriverId)}</TableCell>
                         <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
                                 <Button variant="ghost" size="icon" onClick={() => router.push(ROUTES.admin.orders.detail(order.id))}>
