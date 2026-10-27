@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { apiClient } from '@/services/api-client';
 import { API_ENDPOINTS } from '@/lib/api-endpoints';
 import { Driver } from '@/types/driver.types';
-import { FleetStatus } from '@/enums/fleet-status.enum';
+import { FleetStatus } from '@/enums/duty-status.enum';
 
 export function useUpdateFleetStatus() {
     const queryClient = useQueryClient();

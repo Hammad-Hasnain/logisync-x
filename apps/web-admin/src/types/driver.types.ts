@@ -1,4 +1,4 @@
-import { FleetStatus } from '@/enums/fleet-status.enum';
+import { DutyStatus } from '@/enums/duty-status.enum';
 import { IdentityStatus } from '@/enums/identity-status.enum';
 
 export interface CreateDriverPayload {
@@ -24,11 +24,12 @@ export interface Driver {
     phone: string;
     licenseNumber: string;
     vehicleNumber: string;
-    fleetStatus: FleetStatus;
+    fleetStatus: DutyStatus;
     identityStatus: IdentityStatus;
 }
 
 export interface DriverLookup {
     id: string;
     name: string;
+    dutyStatus: DutyStatus;
 }

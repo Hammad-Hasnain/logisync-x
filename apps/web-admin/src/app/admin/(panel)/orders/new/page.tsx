@@ -11,16 +11,9 @@ import { CreateOrderPayload } from '@/types/order.types';
 import { ROUTES } from '@/lib/routes';
 
 const initialFormState: CreateOrderPayload = {
-    trackingId: '',
-    senderName: '',
-    senderPhone: '',
-    receiverName: '',
-    receiverPhone: '',
-    originAddress: '',
-    destinationAddress: '',
-    parcelDescription: '',
-    weightKg: 0,
-    billingAmount: 0,
+    customerName: '',
+    deliveryAddress: '',
+    pickupLocation: 'Main Warehouse, Karachi',
 };
 
 export default function CreateOrderPage() {
@@ -32,7 +25,7 @@ export default function CreateOrderPage() {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
-    const handleSubmit = (e: React.SubmitEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         createOrder(form);
     };

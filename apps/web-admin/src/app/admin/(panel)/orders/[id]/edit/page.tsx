@@ -24,15 +24,9 @@ export default function EditOrderPage() {
     useEffect(() => {
         if (order) {
             setForm({
-                senderName: order.senderName,
-                senderPhone: order.senderPhone,
-                receiverName: order.receiverName,
-                receiverPhone: order.receiverPhone,
-                originAddress: order.originAddress,
-                destinationAddress: order.destinationAddress,
-                parcelDescription: order.parcelDescription,
-                weightKg: order.weightKg,
-                billingAmount: order.billingAmount,
+                customerName: order.customerName,
+                deliveryAddress: order.deliveryAddress,
+                pickupLocation: order.pickupLocation,
             });
         }
     }, [order]);
@@ -44,7 +38,7 @@ export default function EditOrderPage() {
         setForm((prev) => (prev ? { ...prev, [field]: value } : prev));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.SubmitEvent) => {
         e.preventDefault();
         updateOrder(form);
     };

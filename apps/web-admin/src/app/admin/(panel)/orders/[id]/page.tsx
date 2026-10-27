@@ -48,21 +48,13 @@ export default function OrderDetailPage() {
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Left: shipment details, read-only */}
-                <Card className="md:col-span-2 p-6">
-                    <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-3">Sender</h3>
-                    <DetailRow label="Name" value={order.senderName} />
-                    <DetailRow label="Phone" value={order.senderPhone} />
-                    <DetailRow label="Address" value={order.originAddress} />
-
-                    <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mt-6 mb-3">Receiver</h3>
-                    <DetailRow label="Name" value={order.receiverName} />
-                    <DetailRow label="Phone" value={order.receiverPhone} />
-                    <DetailRow label="Address" value={order.destinationAddress} />
-
-                    <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mt-6 mb-3">Parcel</h3>
-                    <DetailRow label="Description" value={order.parcelDescription} />
-                    <DetailRow label="Weight" value={`${order.weightKg} kg`} />
-                    <DetailRow label="Billing Amount" value={`Rs. ${order.billingAmount.toLocaleString()}`} />
+                <Card className="md:col-span-2 p-6 space-y-4">
+                    <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-3">Shipment Information</h3>
+                    <DetailRow label="Customer Name" value={order.customerName} />
+                    <DetailRow label="Delivery Address" value={order.deliveryAddress} />
+                    <DetailRow label="Pickup Location" value={order.pickupLocation} />
+                    {order.driverName && <DetailRow label="Assigned Driver" value={order.driverName} />}
+                    {order.driverVehicleNumber && <DetailRow label="Vehicle Number" value={order.driverVehicleNumber} />}
                 </Card>
 
                 {/* Right: editable — status + driver assignment */}
@@ -98,7 +90,7 @@ export default function OrderDetailPage() {
                                 {drivers?.length === 0 ? "No drivers available" : "Unassigned"}
                             </option>
                             {drivers?.map((driver) => (
-                                <option key={driver.id} value={driver.id}>
+                                <option key={driver.id} value={driver.id} >
                                     {driver.name}
                                 </option>
                             ))}

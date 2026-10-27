@@ -15,7 +15,7 @@ import { IdentityStatus } from '@/enums/identity-status.enum';
 import { FLEET_STATUS_BADGE_VARIANT, IDENTITY_STATUS_BADGE_VARIANT } from '@/lib/driver-status-styles';
 import { ROUTES } from '@/lib/routes';
 import { useUpdateFleetStatus } from '@/hooks/mutations/use-update-fleet-status';
-import { FleetStatus } from '@/enums/fleet-status.enum';
+import { FleetStatus } from '@/enums/duty-status.enum';
 
 export default function DriverDetailPage() {
     const { id } = useParams<{ id: string }>();

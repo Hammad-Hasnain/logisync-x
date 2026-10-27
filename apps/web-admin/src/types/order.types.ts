@@ -17,14 +17,4 @@ export interface Order extends CreateOrderPayload {
     updatedAt: string;
 }
 
-export interface UpdateOrderPayload {
-    senderName: string;
-    senderPhone: string;
-    receiverName: string;
-    receiverPhone: string;
-    originAddress: string;
-    destinationAddress: string;
-    parcelDescription: string;
-    weightKg: number;
-    billingAmount: number;
-}
+export interface UpdateOrderPayload extends Partial<CreateOrderPayload> { }

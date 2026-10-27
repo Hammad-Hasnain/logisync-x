@@ -1,15 +1,13 @@
-import { FleetStatus } from '@/enums/fleet-status.enum';
 import { IdentityStatus } from '@/enums/identity-status.enum';
 import { BadgeProps } from '@/components/ui/badge';
+import { DutyStatus } from '@/enums/duty-status.enum';
 
 type BadgeVariant = NonNullable<BadgeProps['variant']>;
 
-export const FLEET_STATUS_BADGE_VARIANT: Record<FleetStatus, BadgeVariant> = {
-    [FleetStatus.ONLINE]: 'green',
-    [FleetStatus.OFFLINE]: 'gray',
-    [FleetStatus.ON_TRIP]: 'cyan',
-    [FleetStatus.ON_BREAK]: 'yellow',
-    [FleetStatus.MAINTENANCE]: 'red',
+export const DRIVER_DUTY_STATUS_BADGE_VARIANT: Record<DutyStatus, 'gray' | 'blue' | 'green'> = {
+    [DutyStatus.OFFLINE]: 'gray',
+    [DutyStatus.AVAILABLE]: 'green',
+    [DutyStatus.ON_TRIP]: 'blue',
 };
 
 export const IDENTITY_STATUS_BADGE_VARIANT: Record<IdentityStatus, BadgeVariant> = {

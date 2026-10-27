@@ -9,7 +9,7 @@ export const API_ENDPOINTS = {
     },
     orders: {
         list: '/orders',
-        create: '/orders/create',
+        create: '/orders',
         update: (id: string) => `/orders/${id}`,
         detail: (id: string) => `/orders/${id}`,
         assignDriver: (id: string) => `/orders/${id}/assign-driver`,
@@ -17,7 +17,7 @@ export const API_ENDPOINTS = {
     },
     drivers: {
         list: '/drivers',
-        lookup: '/drivers/lookup',
+        lookup: '/drivers/dropdown',
         create: '/drivers/signup',
         update: (id: string) => `/drivers/${id}`,
         detail: (id: string) => `/drivers/${id}`,
