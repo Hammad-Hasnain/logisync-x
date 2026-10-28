@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
-import { Redirect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
@@ -30,9 +30,7 @@ export default function LoginScreen() {
                 email: email.trim(),
                 password: password
             });
-            // console.log(response.status)
-            // console.log(response.data)
-            // console.log(response.data.accessToken)
+
             if ((response.status === 200 || response.status === 201) && response.data.accessToken) {
                 await SecureStore.setItemAsync('driver_auth_token', response.data.accessToken);
 

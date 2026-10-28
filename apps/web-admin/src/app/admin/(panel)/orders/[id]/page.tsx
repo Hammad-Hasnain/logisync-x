@@ -4,7 +4,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
-import axios from 'axios';
 
 import { PageHeader } from '@/components/organisms/page-header';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ import { ROUTES } from '@/lib/routes';
 
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { apiClient } from '@/services/api-client';
 
 const BASE_URL = 'http://192.168.100.27:3000';
 
@@ -47,7 +47,7 @@ export default function OrderDetailPage() {
         const initializeLeafletTracking = async () => {
             try {
                 // 1. Fetch History data
-                const response = await axios.get(`${BASE_URL}/api/v1/tracking/history/${orderId}`);
+                const response = await apiClient.get(`${BASE_URL}/api/v1/tracking/history/${orderId}`);
                 const historyCoordinates = response.data?.data?.coordinates || [];
 
                 const formattedPath: [number, number][] = historyCoordinates.map((pt: any) => [
