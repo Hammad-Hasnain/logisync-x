@@ -15,6 +15,7 @@ export interface UpdateDriverPayload {
     name?: string;
     phone?: string;
     vehicleNumber?: string;
+    status?: IdentityStatus;
 }
 
 export interface Driver {

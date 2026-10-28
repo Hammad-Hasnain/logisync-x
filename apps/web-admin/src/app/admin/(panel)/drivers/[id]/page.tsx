@@ -5,25 +5,22 @@ import { ArrowLeft, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/organisms/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-// import { Select } from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { DetailRow } from '@/components/ui/detail-row';
 import { StateMessage } from '@/components/ui/state-message';
 import { useDriver } from '@/hooks/queries/use-driver';
-// import { useUpdateIdentityStatus } from '@/hooks/mutations/use-update-identity-status';
-// import { useUpdateDutyStatus } from '@/hooks/mutations/use-update-duty-status'; 
-// import { IdentityStatus } from '@/enums/identity-status.enum';
-// import { DutyStatus } from '@/enums/duty-status.enum';
 import { ROUTES } from '@/lib/routes';
 import { DRIVER_DUTY_STATUS_BADGE_VARIANT, IDENTITY_STATUS_BADGE_VARIANT } from '@/lib/driver-status-styles';
+import { useUpdateDriver } from '@/hooks/mutations/use-update-driver';
+import { IdentityStatus } from '@/enums/identity-status.enum';
 
 export default function DriverDetailPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
 
     const { data: driver, isLoading } = useDriver(id);
-    // const { mutate: updateIdentityStatus, isPending: isIdentityPending } = useUpdateIdentityStatus();
-    // const { mutate: updateDutyStatus, isPending: isDutyPending } = useUpdateDutyStatus();
+    const { mutate: updateDriver, isPending: isIdentityPending } = useUpdateDriver(id);
 
     if (isLoading) return <StateMessage variant="loading" message="Loading driver..." />;
     if (!driver) return <StateMessage variant="empty" message="Driver not found." />;
@@ -68,17 +65,17 @@ export default function DriverDetailPage() {
                                 {driver.status}
                             </Badge>
                         </div>
-                        {/* <Select
+                        <Select
                             value={driver.status}
                             disabled={isIdentityPending}
-                            onChange={(e) => updateIdentityStatus({ driverId: driver.id, status: e.target.value as IdentityStatus })}
+                            onChange={(e) => updateDriver({ status: e.target.value as IdentityStatus })}
                         >
                             {Object.values(IdentityStatus).map((status) => (
                                 <option key={status} value={status}>
                                     {status}
                                 </option>
                             ))}
-                        </Select> */}
+                        </Select>
                     </div>
 
                     <div>
