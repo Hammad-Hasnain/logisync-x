@@ -7,7 +7,6 @@ import { BatchSyncTelemetryDto } from './dto/batch-sync-telemetry.dto';
 import Redis from 'ioredis';
 import { REDIS_CLIENT } from 'src/infrastructure/redis/redis.constants';
 import { Cron, CronExpression } from '@nestjs/schedule'
-import { log } from 'node:console';
 
 @Injectable()
 export class TrackingService {
@@ -153,11 +152,7 @@ export class TrackingService {
         }
     }
 
-    /**
-     * =========================================================================
-     * NEW MILESTONE 1 ACTION: Online Socket Emits Handler (Zero Database Overhead)
-     * =========================================================================
-     */
+    // Online Socket Emits Handler (Zero Database Overhead) 
     async pushTelemetryToCache(orderId: string, lat: number, lng: number, timestamp: string): Promise<any> {
         const targetOrderId = new Types.ObjectId(orderId);
 
@@ -231,7 +226,6 @@ export class TrackingService {
     async getMongoStoredCoordinates(orderId: string): Promise<any> {
         const targetOrderId = new Types.ObjectId(orderId);
 
-        // Read clean isolated historical tracking log document directly from MongoDB disk architectures
         return await this.trackingLogModel.findOne({ orderId: targetOrderId }).lean();
     }
 
