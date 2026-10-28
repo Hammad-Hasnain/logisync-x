@@ -15,7 +15,6 @@ const initialState: CreateDriverPayload = {
     email: '',
     password: '',
     phone: '',
-    licenseNumber: '',
     vehicleNumber: '',
 };
 

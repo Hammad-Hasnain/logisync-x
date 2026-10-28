@@ -18,7 +18,7 @@ export const API_ENDPOINTS = {
     drivers: {
         list: '/drivers',
         lookup: '/drivers/dropdown',
-        create: '/drivers/signup',
+        create: '/drivers',
         update: (id: string) => `/drivers/${id}`,
         detail: (id: string) => `/drivers/${id}`,
         updateIdentityStatus: (id: string) => `/drivers/${id}/identity-status`,

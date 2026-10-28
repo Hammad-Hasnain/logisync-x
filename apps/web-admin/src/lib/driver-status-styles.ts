@@ -10,10 +10,8 @@ export const DRIVER_DUTY_STATUS_BADGE_VARIANT: Record<DutyStatus, 'gray' | 'blue
     [DutyStatus.ON_TRIP]: 'blue',
 };
 
-export const IDENTITY_STATUS_BADGE_VARIANT: Record<IdentityStatus, BadgeVariant> = {
+export const IDENTITY_STATUS_BADGE_VARIANT: Record<IdentityStatus, 'yellow' | 'green' | 'red'> = {
     [IdentityStatus.PENDING]: 'yellow',
     [IdentityStatus.ACTIVE]: 'green',
-    [IdentityStatus.SUSPENDED]: 'red',
-    [IdentityStatus.LOCKED]: 'red',
-    [IdentityStatus.DEACTIVATED]: 'gray',
+    [IdentityStatus.DEACTIVE]: 'red',
 };

@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StateMessage } from '@/components/ui/state-message';
 import { useDrivers } from '@/hooks/queries/use-drivers';
-import { FLEET_STATUS_BADGE_VARIANT, IDENTITY_STATUS_BADGE_VARIANT } from '@/lib/driver-status-styles';
 import { ROUTES } from '@/lib/routes';
+import { DRIVER_DUTY_STATUS_BADGE_VARIANT, IDENTITY_STATUS_BADGE_VARIANT } from '@/lib/driver-status-styles';
 
 export function DriversTable() {
     const router = useRouter();
@@ -22,9 +22,10 @@ export function DriversTable() {
             <TableHead>
                 <TableRow>
                     <TableHeaderCell>Name</TableHeaderCell>
-                    <TableHeaderCell>License</TableHeaderCell>
+                    <TableHeaderCell>Email</TableHeaderCell>
+                    <TableHeaderCell>Phone</TableHeaderCell>
                     <TableHeaderCell>Vehicle</TableHeaderCell>
-                    <TableHeaderCell>Fleet Status</TableHeaderCell>
+                    <TableHeaderCell>Duty Status</TableHeaderCell>
                     <TableHeaderCell>Account Status</TableHeaderCell>
                     <TableHeaderCell className="text-right">Actions</TableHeaderCell>
                 </TableRow>
@@ -33,14 +34,17 @@ export function DriversTable() {
                 {drivers.map((driver) => (
                     <TableRow key={driver.id}>
                         <TableCell className="font-medium">{driver.name}</TableCell>
-                        <TableCell>{driver.licenseNumber}</TableCell>
+                        <TableCell>{driver.email}</TableCell>
+                        <TableCell>{driver.phone}</TableCell>
                         <TableCell>{driver.vehicleNumber}</TableCell>
                         <TableCell>
-                            <Badge variant={FLEET_STATUS_BADGE_VARIANT[driver.fleetStatus]}>{driver.fleetStatus}</Badge>
+                            <Badge variant={DRIVER_DUTY_STATUS_BADGE_VARIANT[driver.dutyStatus]}>
+                                {driver.dutyStatus}
+                            </Badge>
                         </TableCell>
                         <TableCell>
-                            <Badge variant={IDENTITY_STATUS_BADGE_VARIANT[driver.identityStatus]}>
-                                {driver.identityStatus}
+                            <Badge variant={IDENTITY_STATUS_BADGE_VARIANT[driver.status] ?? 'gray'}>
+                                {driver.status}
                             </Badge>
                         </TableCell>
                         <TableCell className="text-right">

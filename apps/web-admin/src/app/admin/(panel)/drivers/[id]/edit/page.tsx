@@ -23,7 +23,12 @@ export default function EditDriverPage() {
 
     useEffect(() => {
         if (driver) {
-            setForm({ name: driver.name, licenseNumber: driver.licenseNumber, vehicleNumber: driver.vehicleNumber });
+            setForm({
+                name: driver.name,
+                email: driver.email,
+                phone: driver.phone,
+                vehicleNumber: driver.vehicleNumber,
+            });
         }
     }, [driver]);
 
@@ -34,9 +39,10 @@ export default function EditDriverPage() {
         setForm((prev) => (prev ? { ...prev, [field]: value } : prev));
     };
 
-    const handleSubmit = (e: React.SubmitEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        updateDriver(form);
+        const { email, ...restForm } = form;
+        updateDriver(restForm);
     };
 
     return (

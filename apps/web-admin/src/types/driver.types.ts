@@ -1,33 +1,35 @@
 import { DutyStatus } from '@/enums/duty-status.enum';
 import { IdentityStatus } from '@/enums/identity-status.enum';
+import { Role } from '@/enums/role.enum';
 
 export interface CreateDriverPayload {
     name: string;
     email: string;
     password: string;
     phone: string;
-    licenseNumber: string;
     vehicleNumber: string;
 }
 
 export interface UpdateDriverPayload {
-    name: string;
-    licenseNumber: string;
-    vehicleNumber: string;
+    email?: string;
+    name?: string;
+    phone?: string;
+    vehicleNumber?: string;
 }
 
 export interface Driver {
     id: string;
-    identityId: string;
+    identityId?: string;
     name: string;
     email: string;
     phone: string;
-    licenseNumber: string;
     vehicleNumber: string;
-    fleetStatus: DutyStatus;
-    identityStatus: IdentityStatus;
+    dutyStatus: DutyStatus;
+    status: IdentityStatus;
+    role: Role;
+    createdAt?: string;
+    updatedAt?: string;
 }
-
 export interface DriverLookup {
     id: string;
     name: string;

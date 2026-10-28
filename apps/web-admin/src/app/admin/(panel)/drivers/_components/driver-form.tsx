@@ -28,55 +28,48 @@ export function DriverForm({ mode, values, onChange, onSubmit, isSubmitting }: D
                     required
                 />
 
+                <FormField
+                    id="email"
+                    label="Email"
+                    type="email"
+                    readOnly={!isCreate}
+                    value={values.email}
+                    onChange={(e) => onChange('email', e.target.value)}
+                    required
+                />
+
+                {/* Password sirf Create mode mein dikhega */}
                 {isCreate && (
-                    <>
-                        <FormField
-                            id="email"
-                            label="Email"
-                            type="email"
-                            value={createValues.email}
-                            onChange={(e) => onChange('email', e.target.value)}
-                            required
-                        />
-                        <FormField
-                            id="password"
-                            label="Password"
-                            type="password"
-                            value={createValues.password}
-                            onChange={(e) => onChange('password', e.target.value)}
-                            required
-                        />
-                        <FormField
-                            id="phone"
-                            label="Phone"
-                            type="tel"
-                            value={createValues.phone}
-                            onChange={(e) => onChange('phone', e.target.value)}
-                            required
-                        />
-                    </>
+                    <FormField
+                        id="password"
+                        label="Password"
+                        type="password"
+                        value={createValues.password ?? ''}
+                        onChange={(e) => onChange('password', e.target.value)}
+                        required
+                    />
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                        id="licenseNumber"
-                        label="License Number"
-                        value={values.licenseNumber}
-                        onChange={(e) => onChange('licenseNumber', e.target.value)}
-                        required
-                    />
-                    <FormField
-                        id="vehicleNumber"
-                        label="Vehicle Number"
-                        value={values.vehicleNumber}
-                        onChange={(e) => onChange('vehicleNumber', e.target.value)}
-                        required
-                    />
-                </div>
+                <FormField
+                    id="phone"
+                    label="Phone"
+                    type="tel"
+                    value={values.phone}
+                    onChange={(e) => onChange('phone', e.target.value)}
+                    required
+                />
+
+                <FormField
+                    id="vehicleNumber"
+                    label="Vehicle Number"
+                    value={values.vehicleNumber}
+                    onChange={(e) => onChange('vehicleNumber', e.target.value)}
+                    required
+                />
 
                 {!isCreate && (
                     <p className="text-xs text-foreground/40">
-                        Email, phone, and password can't be changed here.
+                        Email can't be changed right now.
                     </p>
                 )}
 

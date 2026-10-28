@@ -5,25 +5,25 @@ import { ArrowLeft, Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/organisms/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Select } from '@/components/ui/select';
+// import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { DetailRow } from '@/components/ui/detail-row';
 import { StateMessage } from '@/components/ui/state-message';
 import { useDriver } from '@/hooks/queries/use-driver';
-import { useUpdateIdentityStatus } from '@/hooks/mutations/use-update-identity-status';
-import { IdentityStatus } from '@/enums/identity-status.enum';
-import { FLEET_STATUS_BADGE_VARIANT, IDENTITY_STATUS_BADGE_VARIANT } from '@/lib/driver-status-styles';
+// import { useUpdateIdentityStatus } from '@/hooks/mutations/use-update-identity-status';
+// import { useUpdateDutyStatus } from '@/hooks/mutations/use-update-duty-status'; 
+// import { IdentityStatus } from '@/enums/identity-status.enum';
+// import { DutyStatus } from '@/enums/duty-status.enum';
 import { ROUTES } from '@/lib/routes';
-import { useUpdateFleetStatus } from '@/hooks/mutations/use-update-fleet-status';
-import { FleetStatus } from '@/enums/duty-status.enum';
+import { DRIVER_DUTY_STATUS_BADGE_VARIANT, IDENTITY_STATUS_BADGE_VARIANT } from '@/lib/driver-status-styles';
 
 export default function DriverDetailPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
 
     const { data: driver, isLoading } = useDriver(id);
-    const { mutate: updateStatus, isPending } = useUpdateIdentityStatus();
-    const { mutate: updateFleetStatus, isPending: isFleetPending } = useUpdateFleetStatus();
+    // const { mutate: updateIdentityStatus, isPending: isIdentityPending } = useUpdateIdentityStatus();
+    // const { mutate: updateDutyStatus, isPending: isDutyPending } = useUpdateDutyStatus();
 
     if (isLoading) return <StateMessage variant="loading" message="Loading driver..." />;
     if (!driver) return <StateMessage variant="empty" message="Driver not found." />;
@@ -47,61 +47,62 @@ export default function DriverDetailPage() {
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Left: read-only profile info */}
-                <Card className="md:col-span-2 p-6">
+                <Card className="md:col-span-2 p-6 space-y-4">
                     <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-3">Profile</h3>
                     <DetailRow label="Name" value={driver.name} />
                     <DetailRow label="Email" value={driver.email} />
                     <DetailRow label="Phone" value={driver.phone} />
-                    <DetailRow label="License Number" value={driver.licenseNumber} />
                     <DetailRow label="Vehicle Number" value={driver.vehicleNumber} />
                     <DetailRow
-                        label="Fleet Status"
-                        value={<Badge variant={FLEET_STATUS_BADGE_VARIANT[driver.fleetStatus]}>{driver.fleetStatus}</Badge>}
+                        label="Duty Status"
+                        value={<Badge variant={DRIVER_DUTY_STATUS_BADGE_VARIANT[driver.dutyStatus]}>{driver.dutyStatus}</Badge>}
                     />
                 </Card>
 
                 {/* Right: quick action */}
-                <Card className="p-6 h-fit space-y-3">
+                <Card className="p-6 h-fit space-y-6">
                     <div>
                         <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-2">Account Status</h3>
                         <div className="mb-3">
-                            <Badge variant={IDENTITY_STATUS_BADGE_VARIANT[driver.identityStatus]}>{driver.identityStatus}</Badge>
+                            <Badge variant={IDENTITY_STATUS_BADGE_VARIANT[driver.status] ?? 'gray'}>
+                                {driver.status}
+                            </Badge>
                         </div>
-                        <Select
-                            value={driver.identityStatus}
-                            disabled={isPending}
-                            onChange={(e) => updateStatus({ driverId: driver.id, status: e.target.value as IdentityStatus })}
+                        {/* <Select
+                            value={driver.status}
+                            disabled={isIdentityPending}
+                            onChange={(e) => updateIdentityStatus({ driverId: driver.id, status: e.target.value as IdentityStatus })}
                         >
                             {Object.values(IdentityStatus).map((status) => (
                                 <option key={status} value={status}>
                                     {status}
                                 </option>
                             ))}
-                        </Select>
+                        </Select> */}
                     </div>
+
                     <div>
                         <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-2">
-                            Fleet Status
+                            Duty Status
                         </h3>
                         <div className="mb-3">
-                            <Badge variant={FLEET_STATUS_BADGE_VARIANT[driver.fleetStatus]}>
-                                {driver.fleetStatus}
+                            <Badge variant={DRIVER_DUTY_STATUS_BADGE_VARIANT[driver.dutyStatus]}>
+                                {driver.dutyStatus}
                             </Badge>
                         </div>
-                        <Select
-                            value={driver.fleetStatus}
-                            disabled={isFleetPending}
-                            onChange={(e) => updateFleetStatus({ driverId: driver.id, status: e.target.value as FleetStatus })}
+                        {/* <Select
+                            value={driver.dutyStatus}
+                            disabled={isDutyPending}
+                            onChange={(e) => updateDutyStatus({ driverId: driver.id, dutyStatus: e.target.value as DutyStatus })}
                         >
-                            {Object.values(FleetStatus).map((status) => (
+                            {Object.values(DutyStatus).map((status) => (
                                 <option key={status} value={status}>
                                     {status}
                                 </option>
                             ))}
-                        </Select>
+                        </Select> */}
                     </div>
                 </Card>
-
             </div>
         </>
     );
