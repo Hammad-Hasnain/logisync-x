@@ -11,8 +11,8 @@ import { DetailRow } from '@/components/ui/detail-row';
 import { useOrder } from '@/hooks/queries/use-order';
 import { useDriversLookup } from '@/hooks/queries/use-drivers-lookup';
 import { useAssignDriver } from '@/hooks/mutations/use-assign-driver';
-import { useUpdateOrderStatus } from '@/hooks/mutations/use-update-order-status';
-import { OrderStatus } from '@/enums/order-status.enum';
+// import { useUpdateOrderStatus } from '@/hooks/mutations/use-update-order-status';
+// import { OrderStatus } from '@/enums/order-status.enum';
 import { ORDER_STATUS_BADGE_VARIANT } from '@/lib/order-status-styles';
 import { ROUTES } from '@/lib/routes';
 import { StateMessage } from '@/components/ui/state-message';
@@ -24,7 +24,7 @@ export default function OrderDetailPage() {
     const { data: order, isLoading } = useOrder(id);
     const { data: drivers } = useDriversLookup();
     const { mutate: assignDriver, isPending: isAssigning } = useAssignDriver();
-    const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateOrderStatus();
+    // const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateOrderStatus();
 
     if (isLoading) return <StateMessage variant="loading" message="Loading order..." />;
     if (!order) return <StateMessage variant="empty" message="Order not found." />;
@@ -64,7 +64,7 @@ export default function OrderDetailPage() {
                         <div className="mb-3">
                             <Badge variant={ORDER_STATUS_BADGE_VARIANT[order.status]}>{order.status}</Badge>
                         </div>
-                        <Select
+                        {/* <Select
                             value={order.status}
                             disabled={isUpdatingStatus}
                             onChange={(e) => updateStatus({ orderId: order.id, status: e.target.value as OrderStatus })}
@@ -74,7 +74,7 @@ export default function OrderDetailPage() {
                                     {status}
                                 </option>
                             ))}
-                        </Select>
+                        </Select> */}
                     </div>
 
                     <div>
