@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, forwardRef, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { Connection, Error, Model, Types } from 'mongoose';
@@ -17,7 +17,8 @@ export class OrdersService {
     constructor(
         @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
         private readonly trackingService: TrackingService,
-        private readonly driversService: DriversService,
+        @Inject(forwardRef(() => DriversService)) private readonly driversService: DriversService,
+
         @InjectConnection() private readonly connection: Connection,
     ) { }
 
@@ -262,5 +263,57 @@ export class OrdersService {
 
         return this.findOrderById(id);
     }
+
+    async getOrderAnalytics() {
+        const [stats] = await this.orderModel.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    totalOrders: { $sum: 1 },
+                    pendingOrders: {
+                        $sum: { $cond: [{ $eq: ["$status", OrderStatus.PENDING] }, 1, 0] }
+                    },
+                    assignedOrders: {
+                        $sum: { $cond: [{ $eq: ["$status", OrderStatus.ASSIGNED] }, 1, 0] }
+                    },
+                    pickedUpOrders: {
+                        $sum: { $cond: [{ $eq: ["$status", OrderStatus.PICKED_UP] }, 1, 0] }
+                    },
+                    inTransitOrders: {
+                        $sum: { $cond: [{ $eq: ["$status", OrderStatus.IN_TRANSIT] }, 1, 0] }
+                    },
+                    deliveredOrders: {
+                        $sum: { $cond: [{ $eq: ["$status", OrderStatus.DELIVERED] }, 1, 0] }
+                    },
+                    cancelledOrders: {
+                        $sum: { $cond: [{ $eq: ["$status", OrderStatus.CANCELLED] }, 1, 0] }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    totalOrders: { $ifNull: ["$totalOrders", 0] },
+                    pendingOrders: { $ifNull: ["$pendingOrders", 0] },
+                    assignedOrders: { $ifNull: ["$assignedOrders", 0] },
+                    pickedUpOrders: { $ifNull: ["$pickedUpOrders", 0] },
+                    inTransitOrders: { $ifNull: ["$inTransitOrders", 0] },
+                    deliveredOrders: { $ifNull: ["$deliveredOrders", 0] },
+                    cancelledOrders: { $ifNull: ["$cancelledOrders", 0] }
+                }
+            }
+        ]);
+
+        return stats || {
+            totalOrders: 0,
+            pendingOrders: 0,
+            assignedOrders: 0,
+            pickedUpOrders: 0,
+            inTransitOrders: 0,
+            deliveredOrders: 0,
+            cancelledOrders: 0
+        };
+    }
+
 }
 

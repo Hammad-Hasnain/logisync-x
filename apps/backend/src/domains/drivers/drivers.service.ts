@@ -282,4 +282,38 @@ export class DriversService {
             }
         ]).exec();
     }
+
+    async getDriverAnalytics() {
+        const [stats] = await this.driverModel.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    availableDrivers: {
+                        $sum: { $cond: [{ $eq: ["$dutyStatus", DutyStatus.AVAILABLE] }, 1, 0] }
+                    },
+                    onTripDrivers: {
+                        $sum: { $cond: [{ $eq: ["$dutyStatus", DutyStatus.ON_TRIP] }, 1, 0] }
+                    },
+                    offlineDrivers: {
+                        $sum: { $cond: [{ $eq: ["$dutyStatus", DutyStatus.OFFLINE] }, 1, 0] }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    availableDrivers: { $ifNull: ["$availableDrivers", 0] },
+                    onTripDrivers: { $ifNull: ["$onTripDrivers", 0] },
+                    offlineDrivers: { $ifNull: ["$offlineDrivers", 0] }
+                }
+            }
+        ]);
+
+        return stats || {
+            availableDrivers: 0,
+            onTripDrivers: 0,
+            offlineDrivers: 0
+        };
+    }
+
 }

@@ -12,7 +12,6 @@ import { Role } from 'src/shared/enums/role.enum';
 import { AdminsService } from '../admins/admins.service';
 import { DriversService } from '../drivers/drivers.service';
 import { Types } from 'mongoose';
-import { UpdateIdentityDto } from './dto/update-identity.dto';
 
 @Injectable()
 export class IdentityService {
@@ -133,5 +132,40 @@ export class IdentityService {
             { ...(session && { session }) }
         );
     }
+
+    async getIdentityAnalytics() {
+        const [stats] = await this.identityModel.aggregate([
+            {
+                $match: { role: Role.DRIVER }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalDrivers: { $sum: 1 },
+                    activeDrivers: {
+                        $sum: { $cond: [{ $eq: ["$status", IdentityStatus.ACTIVE] }, 1, 0] }
+                    },
+                    pendingDrivers: {
+                        $sum: { $cond: [{ $eq: ["$status", IdentityStatus.PENDING] }, 1, 0] }
+                    },
+                    deactiveDrivers: {
+                        $sum: { $cond: [{ $eq: ["$status", IdentityStatus.DEACTIVE] }, 1, 0] }
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    totalDrivers: { $ifNull: ["$totalDrivers", 0] },
+                    activeDrivers: { $ifNull: ["$activeDrivers", 0] },
+                    pendingDrivers: { $ifNull: ["$pendingDrivers", 0] },
+                    deactiveDrivers: { $ifNull: ["$deactiveDrivers", 0] }
+                }
+            }
+        ]);
+
+        return stats || { totalDrivers: 0, activeDrivers: 0, pendingDrivers: 0, deactiveDrivers: 0 };
+    }
+
 
 }

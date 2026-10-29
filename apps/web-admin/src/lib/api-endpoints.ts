@@ -5,6 +5,7 @@ export const API_ENDPOINTS = {
     },
     admin: {
         signup: '/admins/signup',
+        dashboardAnalytics: '/admins/dashboard/analytics',
         profile: (id: string) => `/admins/${id}`,
     },
     orders: {
