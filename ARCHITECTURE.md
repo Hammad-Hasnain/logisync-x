@@ -85,7 +85,7 @@ Admin --> UC_VLL
 
 %% Driver Interconnections
 Driver --> UC_DL
-Driver --> Driver --> UC_HP
+Driver --> UC_HP
 Driver --> UC_OD
 Driver --> UC_US
 Driver --> UC_SL
