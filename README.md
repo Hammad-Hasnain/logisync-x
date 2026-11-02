@@ -130,7 +130,7 @@ npm start
 ## Author
 
 **Hammad Hasnain**  
-*Founder & Full-Stack Engineer, HSquare Development*  
+*Full-Stack Software Engineer & Systems Architect*  
 
 Karachi, Pakistan  
 
