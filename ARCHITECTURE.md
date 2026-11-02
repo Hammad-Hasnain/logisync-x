@@ -46,6 +46,64 @@ flowchart TD
 
 ---
 
+## 1.1 High-Level System Use Cases
+
+The following usecase-beta diagram outlines the system boundaries and capabilities split across the Web Admin Panel and the Driver Mobile App, enforcing strict authentication criteria and tracking lifecycle logic.
+
+```mermaid
+usecase-beta
+direction LR
+
+%% Actors Definition
+actor Admin("👨‍💼 Admin User")
+actor Driver("🚗 Driver Mobile User")
+
+%% Admin Web Panel Boundary
+systemBoundary "Admin Web Panel"
+    UC_AL("Log In")
+    UC_DB("View Dashboard")
+    UC_OM("Orders Management")
+    UC_DM("Drivers Management")
+    UC_VLL("Track Live Location (Order Detail)")
+end
+
+%% Driver Mobile App Boundary
+systemBoundary "Driver Mobile App"
+    UC_DL("Log In")
+    UC_HP("Home Page (View Orders)")
+    UC_OD("Order Detail Page")
+    UC_US("Update Order Status (In-Transit etc.)")
+    UC_SL("Stream Live GPS Location")
+end
+
+%% Admin Interconnections
+Admin --> UC_AL
+Admin --> UC_DB
+Admin --> UC_OM
+Admin --> UC_DM
+Admin --> UC_VLL
+
+%% Driver Interconnections
+Driver --> UC_DL
+Driver --> Driver --> UC_HP
+Driver --> UC_OD
+Driver --> UC_US
+Driver --> UC_SL
+
+%% Core Dependencies & Extensions
+UC_DB ..> :include UC_AL
+UC_OM ..> :include UC_AL
+UC_DM ..> :include UC_AL
+
+UC_HP ..> :include UC_DL
+UC_OD ..> :include UC_DL
+
+UC_SL ..> :extend UC_US
+UC_SL ..> :include UC_VLL
+```
+
+---
+
 ## 2. Offline-to-Online Telemetry Sequence Flow
 
 ```mermaid
